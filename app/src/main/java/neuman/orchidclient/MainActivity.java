@@ -110,6 +110,10 @@ public class MainActivity extends Activity {
 
     private void selectItem(int position) {
         Log.d("drawer","we made it");
+        Fragment fragment = new LocationPickFragment();
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
         // update the main content by replacing fragments
         /*
         Fragment fragment = new PlanetFragment();
