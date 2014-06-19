@@ -13,6 +13,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,7 +47,7 @@ public class MainActivity extends Activity {
                     .commit();
         }
 
-        mPlanetTitles = new String[]{"alpha", "beta", "gamma"};
+        mPlanetTitles = new String[]{"Outbox", "Drafts", "Choose Location", "Settings", "Open Web App", "Test"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
@@ -108,12 +109,17 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void selectItem(int position) {
-        Log.d("drawer","we made it");
-        Fragment fragment = new LocationPickFragment();
+    private void launchFragment(Fragment fragment){
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+    }
+
+    private void selectItem(int position) {
+        Log.d("drawer","we made it");
+        if (position==5){
+            launchFragment(new FormFragment());
+        }
         // update the main content by replacing fragments
         /*
         Fragment fragment = new PlanetFragment();
@@ -127,8 +133,8 @@ public class MainActivity extends Activity {
         // update selected item and title, then close the drawer
         mDrawerList.setItemChecked(position, true);
         setTitle(mPlanetTitles[position]);
-        mDrawerLayout.closeDrawer(mDrawerList);
         */
+        mDrawerLayout.closeDrawer(mDrawerList);
     }
 
     /*
@@ -165,6 +171,7 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+
     /**
      * A placeholder fragment containing a simple view.
      */
@@ -172,6 +179,7 @@ public class MainActivity extends Activity {
         private Button button_english;
         private static int LOGIN_RESULT_CODE = 1;
         private static int PICKLOCATION_RESULT_CODE = 2;
+        private static int FORM_RESULT_CODE = 3;
 
         public PlaceholderFragment() {
         }
