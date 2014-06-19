@@ -10,7 +10,7 @@
     <ScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/scrollView3"
+        android:id="@+id/scrollView"
         android:layout_gravity="top" >
 
     <LinearLayout
@@ -18,7 +18,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_gravity="center"
-        android:id="@+id/linearLayout18">
+        android:id="@+id/ScrollingLinearLayout">
 
         <LinearLayout
             android:orientation="horizontal"

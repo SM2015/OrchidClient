@@ -7,7 +7,13 @@ import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RadioGroup;
+import android.widget.Switch;
 
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -28,6 +34,8 @@ public class FormFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    private List switches = new ArrayList();
 
     private OnFragmentInteractionListener mListener;
 
@@ -65,7 +73,22 @@ public class FormFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_form, container, false);
+        View inflatedView = inflater.inflate(R.layout.fragment_form, container, false);
+
+        LinearLayout layout = (LinearLayout) inflatedView.findViewById(R.id.ScrollingLinearLayout);
+        String[] switch_names = {"Alpha", "Beta", "Gamma"};
+        for (String name : switch_names)
+        {
+            Switch new_switch = new Switch(getActivity());
+            new_switch.setText(name);
+            layout.addView(new_switch,
+                    new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT));
+            switches.add(new_switch);
+        }
+
+        return inflatedView;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -78,6 +101,7 @@ public class FormFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+
     }
 
     @Override
