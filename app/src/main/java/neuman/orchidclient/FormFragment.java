@@ -4,16 +4,22 @@ import android.app.Activity;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.Switch;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -35,7 +41,7 @@ public class FormFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
-    private List switches = new ArrayList();
+    private List<Switch> switches = new ArrayList<Switch>();
 
     private OnFragmentInteractionListener mListener;
 
@@ -75,12 +81,22 @@ public class FormFragment extends Fragment {
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_form, container, false);
 
-        LinearLayout layout = (LinearLayout) inflatedView.findViewById(R.id.ScrollingLinearLayout);
+        //find the english button and add alistener for it
+        Button button_submit = (Button) inflatedView.findViewById(R.id.submit_button);
+        button_submit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                submitForm();
+            }
+        });
+
+        LinearLayout layout = (LinearLayout) inflatedView.findViewById(R.id.FieldsLinearLayout);
         String[] switch_names = {"Alpha", "Beta", "Gamma"};
         for (String name : switch_names)
         {
             Switch new_switch = new Switch(getActivity());
             new_switch.setText(name);
+            new_switch.setTag(name);
             layout.addView(new_switch,
                     new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -123,6 +139,22 @@ public class FormFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         public void onFragmentInteraction(Uri uri);
+    }
+
+    private void submitForm(){
+        List switch_values = new ArrayList();
+        for (Switch s : switches)
+        {
+            Map valueMap = new HashMap();
+            valueMap.put("name", (String) s.getTag());
+            valueMap.put("value", s.isChecked());
+            switch_values.add(valueMap);
+
+        }
+        Map outputMap = new HashMap();
+        outputMap.put("values", switch_values);
+        JSONObject outputJSON = new JSONObject(outputMap);
+        Log.d("valueJSON", outputJSON.toString());
     }
 
 }
