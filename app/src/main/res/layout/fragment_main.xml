@@ -35,7 +35,7 @@
         android:layout_height="wrap_content"
         android:text="@string/spanish_button_name"
         android:id="@+id/button_spanish"
-        android:layout_below="@+id/button"
+        android:layout_below="@+id/submit_button"
         android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
