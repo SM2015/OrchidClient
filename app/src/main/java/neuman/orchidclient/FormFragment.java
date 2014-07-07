@@ -1,4 +1,5 @@
 package neuman.orchidclient;
+//icon from http://raindropmemory.deviantart.com
 
 import android.app.ActionBar;
 import android.app.Activity;

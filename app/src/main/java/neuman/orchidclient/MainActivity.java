@@ -24,8 +24,6 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.support.v4.app.ActionBarDrawerToggle;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
 
 
 
