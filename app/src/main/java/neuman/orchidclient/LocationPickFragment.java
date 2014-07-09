@@ -1,10 +1,14 @@
 package neuman.orchidclient;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.provider.UserDictionary;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +20,8 @@ import android.widget.ListView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import neuman.orchidclient.content.Contract;
 
 
 /**
@@ -113,7 +119,64 @@ public class LocationPickFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+        String TAG = "sync";
         Log.d("location pick", "Made it");
+
+        // A "projection" defines the columns that will be returned for each row
+        String[] mProjection =
+                {
+                        Contract.Entry._ID,    // Contract class constant for the _ID column name
+                        Contract.Entry.COLUMN_NAME_RESPONSE,   // Contract class constant for the word column name
+                };
+
+        // Defines a string to contain the selection clause
+        String mSelectionClause = null;
+
+        // Initializes an array to contain selection arguments
+        String[] mSelectionArgs = {""};
+
+        // Remember to insert code here to check for invalid or malicious input.
+
+
+        ContentResolver contentResolver = getActivity().getContentResolver();
+        // Does a query against the table and returns a Cursor object
+
+        Log.d(TAG, Contract.Entry.CONTENT_URI.toString());
+        Log.d(TAG,mProjection.toString());
+        Log.d(TAG, Contract.Entry.COLUMN_NAME_ENTRY_ID);
+        Cursor mCursor = getActivity().getContentResolver().query(
+                Contract.Entry.CONTENT_URI,  // The content URI of the words table
+                mProjection,                       // The columns to return for each row
+                null,                   // Either null, or the word the user entered
+                null,                    // Either empty, or the string the user entered
+                Contract.Entry.COLUMN_NAME_ENTRY_ID);                       // The sort order for the returned rows
+
+        // Some providers return null if an error occurs, others throw an exception
+        if (null == mCursor) {
+    /*
+     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
+     * call android.util.Log.e() to log this error.
+     *
+     */
+        // If the Cursor is empty, the provider found no matches
+            Log.d(TAG,"Cursor Error");
+        } else if (mCursor.getCount() < 1) {
+
+    /*
+     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
+     * an error. You may want to offer the user the option to insert a new row, or re-type the
+     * search term.
+     */
+            Log.d(TAG,"No results");
+
+        } else {
+            // Insert code here to do something with the results
+            mCursor.moveToFirst();
+            Log.d(TAG,"Got results");
+            String response = mCursor.getString(0);
+            Log.d(TAG, response);
+
+        }
 
     }
 
