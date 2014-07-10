@@ -2,18 +2,23 @@ package neuman.orchidclient;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.accounts.AccountManagerCallback;
+import android.accounts.AccountManagerFuture;
 import android.app.Activity;
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -28,7 +33,10 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.widget.Toast;
+import static neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS;
 
+import neuman.orchidclient.authentication.AccountGeneral;
 
 
 public class MainActivity extends Activity {
@@ -49,6 +57,16 @@ public class MainActivity extends Activity {
     // Instance fields
     Account mAccount;
 
+    private static final String STATE_DIALOG = "state_dialog";
+    private static final String STATE_INVALIDATE = "state_invalidate";
+
+    private String TAG = this.getClass().getSimpleName();
+
+    private AccountManager mAccountManager;
+    private AlertDialog mAlertDialog;
+    private boolean mInvalidate;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +76,7 @@ public class MainActivity extends Activity {
                     .add(R.id.content_frame, new PlaceholderFragment())
                     .commit();
         }
+        mAccountManager = AccountManager.get(this);
         mAccount = CreateSyncAccount(this);
 
         mPlanetTitles = new String[]{"Outbox", "Drafts", "Choose Location", "Settings", "Open Web App", "Test"};
@@ -97,6 +116,162 @@ public class MainActivity extends Activity {
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setHomeButtonEnabled(true);
 
+        //if not logged in, show the login screen
+        addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+
+        if (savedInstanceState != null) {
+            boolean showDialog = savedInstanceState.getBoolean(STATE_DIALOG);
+            boolean invalidate = savedInstanceState.getBoolean(STATE_INVALIDATE);
+            if (showDialog) {
+                showAccountPicker(AUTHTOKEN_TYPE_FULL_ACCESS, invalidate);
+            }
+        }
+
+    }
+    private void addNewAccount(String accountType, String authTokenType) {
+        final AccountManagerFuture<Bundle> future = mAccountManager.addAccount(accountType, authTokenType, null, null, this, new AccountManagerCallback<Bundle>() {
+            @Override
+            public void run(AccountManagerFuture<Bundle> future) {
+                try {
+                    Bundle bnd = future.getResult();
+                    showMessage("Account was created");
+                    Log.d("udinic", "AddNewAccount Bundle is " + bnd);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    showMessage(e.getMessage());
+                }
+            }
+        }, null);
+    }
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mAlertDialog != null && mAlertDialog.isShowing()) {
+            outState.putBoolean(STATE_DIALOG, true);
+            outState.putBoolean(STATE_INVALIDATE, mInvalidate);
+        }
+    }
+
+
+    /**
+     * Show all the accounts registered on the account manager. Request an auth token upon user select.
+     * @param authTokenType
+     */
+    private void showAccountPicker(final String authTokenType, final boolean invalidate) {
+        mInvalidate = invalidate;
+        final Account availableAccounts[] = mAccountManager.getAccountsByType(AccountGeneral.ACCOUNT_TYPE);
+
+        if (availableAccounts.length == 0) {
+            Toast.makeText(this, "No accounts", Toast.LENGTH_SHORT).show();
+        } else {
+            String name[] = new String[availableAccounts.length];
+            for (int i = 0; i < availableAccounts.length; i++) {
+                name[i] = availableAccounts[i].name;
+            }
+
+            // Account picker
+            mAlertDialog = new AlertDialog.Builder(this).setTitle("Pick Account").setAdapter(new ArrayAdapter<String>(getBaseContext(), android.R.layout.simple_list_item_1, name), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if(invalidate)
+                        invalidateAuthToken(availableAccounts[which], authTokenType);
+                    else
+                        getExistingAccountAuthToken(availableAccounts[which], authTokenType);
+                }
+            }).create();
+            mAlertDialog.show();
+        }
+    }
+
+    /**
+     * Get the auth token for an existing account on the AccountManager
+     * @param account
+     * @param authTokenType
+     */
+    private void getExistingAccountAuthToken(Account account, String authTokenType) {
+        final AccountManagerFuture<Bundle> future = mAccountManager.getAuthToken(account, authTokenType, null, this, null, null);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Bundle bnd = future.getResult();
+
+                    final String authtoken = bnd.getString(AccountManager.KEY_AUTHTOKEN);
+                    showMessage((authtoken != null) ? "SUCCESS!\ntoken: " + authtoken : "FAIL");
+                    Log.d("udinic", "GetToken Bundle is " + bnd);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    showMessage(e.getMessage());
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Invalidates the auth token for the account
+     * @param account
+     * @param authTokenType
+     */
+    private void invalidateAuthToken(final Account account, String authTokenType) {
+        final AccountManagerFuture<Bundle> future = mAccountManager.getAuthToken(account, authTokenType, null, this, null,null);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Bundle bnd = future.getResult();
+
+                    final String authtoken = bnd.getString(AccountManager.KEY_AUTHTOKEN);
+                    mAccountManager.invalidateAuthToken(account.type, authtoken);
+                    showMessage(account.name + " invalidated");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    showMessage(e.getMessage());
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Get an auth token for the account.
+     * If not exist - add it and then return its auth token.
+     * If one exist - return its auth token.
+     * If more than one exists - show a picker and return the select account's auth token.
+     * @param accountType
+     * @param authTokenType
+     */
+    private void getTokenForAccountCreateIfNeeded(String accountType, String authTokenType) {
+        final AccountManagerFuture<Bundle> future = mAccountManager.getAuthTokenByFeatures(accountType, authTokenType, null, this, null, null,
+                new AccountManagerCallback<Bundle>() {
+                    @Override
+                    public void run(AccountManagerFuture<Bundle> future) {
+                        Bundle bnd = null;
+                        try {
+                            bnd = future.getResult();
+                            final String authtoken = bnd.getString(AccountManager.KEY_AUTHTOKEN);
+                            showMessage(((authtoken != null) ? "SUCCESS!\ntoken: " + authtoken : "FAIL"));
+                            Log.d("udinic", "GetTokenForAccount Bundle is " + bnd);
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showMessage(e.getMessage());
+                        }
+                    }
+                }
+                , null);
+    }
+    private void showMessage(final String msg) {
+        if (TextUtils.isEmpty(msg))
+            return;
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getBaseContext(), msg, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -213,6 +388,7 @@ public class MainActivity extends Activity {
         private static int PICKLOCATION_RESULT_CODE = 2;
         private static int FORM_RESULT_CODE = 3;
 
+
         public PlaceholderFragment() {
         }
 
@@ -226,7 +402,8 @@ public class MainActivity extends Activity {
             button_english.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    launchLogin();
+                    //addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+
 
                 }
             });
@@ -236,9 +413,14 @@ public class MainActivity extends Activity {
 
 
 
+
+
+
+
         private void launchLogin(){
-            Intent myIntent = new Intent(getActivity(), LoginActivity.class);
-            startActivityForResult(myIntent, LOGIN_RESULT_CODE);
+            //Intent myIntent = new Intent(getActivity(), LoginActvity.class);
+            //startActivityForResult(myIntent, LOGIN_RESULT_CODE);
+
         }
 
         @Override
@@ -253,7 +435,9 @@ public class MainActivity extends Activity {
             }
 
         }
+
     }
+
 
 
     /**
@@ -291,4 +475,6 @@ public class MainActivity extends Activity {
         return newAccount;
 
     }
+
+
 }
