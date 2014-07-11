@@ -1,6 +1,7 @@
 package neuman.orchidclient.sync;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentProviderOperation;
@@ -38,6 +39,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Random;
 
+import neuman.orchidclient.authentication.AccountGeneral;
 import neuman.orchidclient.content.Contract;
 
 /**
@@ -47,13 +49,14 @@ import neuman.orchidclient.content.Contract;
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 
+    private AccountManager mAccountManager;
     /**
      * URL to fetch content from during a sync.
      *
      * <p>This points to the Android Developers Blog. (Side note: We highly recommend reading the
      * Android Developer Blog to stay up to date on the latest Android platform developments!)
      */
-    private static final String FEED_URL = "http://ec2-54-191-24-215.us-west-2.compute.amazonaws.com/location/list/";
+    private static final String FEED_URL = "http://192.168.1.127:9292/location/create/";
 
     /**
      * Network connection timeout, in milliseconds.
@@ -81,6 +84,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          * from the incoming Context
          */
         mContentResolver = context.getContentResolver();
+        mAccountManager = AccountManager.get(context);
         Log.d("SYNC","SyncAdapter autoInitialize");
     }
 
@@ -99,6 +103,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          * from the incoming Context
          */
         mContentResolver = context.getContentResolver();
+        mAccountManager = AccountManager.get(context);
         Log.d("SYNC","SyncAdapter");
 
     }
@@ -120,13 +125,21 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          */
         String TAG = "sync";
         Log.i(TAG, "Beginning network synchronization");
+        Log.d(TAG, "account.name: "+account.name);
+        Log.d(TAG, "account.type: "+account.type);
+        Log.d(TAG, "mAccountManager: "+mAccountManager.toString());
+        Log.d(TAG, "AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS: "+AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
         String responseString = "no response";
+        String authtoken = mAccountManager.peekAuthToken(account, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
         try {
 
             AndroidHttpClient httpclient = AndroidHttpClient.newInstance("Android");
-            HttpGet get = new HttpGet(FEED_URL);
-            get.setHeader("X_REQUESTED_WITH", "XMLHttpRequest");
-            HttpResponse response = httpclient.execute(get);
+            HttpGet request = new HttpGet(FEED_URL);
+            request.setHeader("X_REQUESTED_WITH", "XMLHttpRequest");
+            String cookiestring = "sessionid="+authtoken.toString();
+            Log.d(TAG,"Cookiestring: "+cookiestring);
+            request.addHeader("Cookie", cookiestring);
+            HttpResponse response = httpclient.execute(request);
             StatusLine statusLine = response.getStatusLine();
             if(statusLine.getStatusCode() == HttpStatus.SC_OK){
                 ByteArrayOutputStream out = new ByteArrayOutputStream();

@@ -77,7 +77,7 @@ public class MainActivity extends Activity {
                     .commit();
         }
         mAccountManager = AccountManager.get(this);
-        mAccount = CreateSyncAccount(this);
+        //mAccount = CreateSyncAccount(this);
 
         mPlanetTitles = new String[]{"Outbox", "Drafts", "Choose Location", "Settings", "Open Web App", "Test"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -117,7 +117,8 @@ public class MainActivity extends Activity {
         getActionBar().setHomeButtonEnabled(true);
 
         //if not logged in, show the login screen
-        addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+        //addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+
 
         if (savedInstanceState != null) {
             boolean showDialog = savedInstanceState.getBoolean(STATE_DIALOG);
@@ -190,6 +191,8 @@ public class MainActivity extends Activity {
      * @param authTokenType
      */
     private void getExistingAccountAuthToken(Account account, String authTokenType) {
+        final Account account_2 = account;
+        final String authTokenType_2 = authTokenType;
         final AccountManagerFuture<Bundle> future = mAccountManager.getAuthToken(account, authTokenType, null, this, null, null);
 
         new Thread(new Runnable() {
@@ -201,12 +204,14 @@ public class MainActivity extends Activity {
                     final String authtoken = bnd.getString(AccountManager.KEY_AUTHTOKEN);
                     showMessage((authtoken != null) ? "SUCCESS!\ntoken: " + authtoken : "FAIL");
                     Log.d("udinic", "GetToken Bundle is " + bnd);
+                    mAccountManager.setAuthToken(account_2, authTokenType_2, authtoken);
                 } catch (Exception e) {
                     e.printStackTrace();
                     showMessage(e.getMessage());
                 }
             }
         }).start();
+
     }
 
     /**
@@ -325,6 +330,9 @@ public class MainActivity extends Activity {
         }
         else if (position==1){
             launchFragment(new LocationPickFragment());
+        }
+        else if (position==3){
+            showAccountPicker(AUTHTOKEN_TYPE_FULL_ACCESS, false);
         }
         // update the main content by replacing fragments
         /*

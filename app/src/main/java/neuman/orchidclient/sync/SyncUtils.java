@@ -7,9 +7,10 @@ import android.content.Context;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 
-import neuman.orchidclient.accounts.GenericAccountService;
+
+
+import neuman.orchidclient.authentication.UdinicAuthenticatorService;
 import neuman.orchidclient.content.Contract;
-import neuman.orchidclient.accounts.GenericAccountService;
 
 /**
  * Created by neuman on 7/8/14.
@@ -49,7 +50,7 @@ public class SyncUtils {
                 .getDefaultSharedPreferences(context).getBoolean(PREF_SETUP_COMPLETE, false);
 
         // Create account, if it's missing. (Either first run, or user has deleted account.)
-        Account account = GenericAccountService.GetAccount();
+        Account account = UdinicAuthenticatorService.GetAccount();
         AccountManager accountManager = (AccountManager) context.getSystemService(Context.ACCOUNT_SERVICE);
         if (accountManager.addAccountExplicitly(account, null, null)) {
             // Inform the system that this account supports sync
@@ -90,7 +91,7 @@ public class SyncUtils {
         b.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         b.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         ContentResolver.requestSync(
-                GenericAccountService.GetAccount(),      // Sync account
+                UdinicAuthenticatorService.GetAccount(),      // Sync account
                 Contract.CONTENT_AUTHORITY, // Content authority
                 b);                                      // Extras
     }
