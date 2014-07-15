@@ -68,13 +68,13 @@ public class Contract {
          */
         public static final String TABLE_NAME = "entry";
         /**
-         * Atom ID. (Note: Not to be confused with the database primary key, which is _ID.
+         * Object type
          */
-        public static final String COLUMN_NAME_ENTRY_ID = "entry_id";
+        public static final String COLUMN_NAME_OBJECTTYPE = "objecttype";
         /**
          * JSON response
          */
-        public static final String COLUMN_NAME_RESPONSE = "response";
+        public static final String COLUMN_NAME_JSON = "json";
 
     }
 }

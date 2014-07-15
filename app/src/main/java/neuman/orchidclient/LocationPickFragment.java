@@ -17,6 +17,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +42,7 @@ public class LocationPickFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     private ListView listView;
+    private List<String> list_text = new ArrayList<String>();
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -83,16 +87,7 @@ public class LocationPickFragment extends Fragment {
         View inflatedView = inflater.inflate(R.layout.fragment_location_pick, container, false);
 
         listView = (ListView) inflatedView.findViewById(R.id.listView);
-        // Defined Array values to show in ListView
-        String[] values = new String[] { "Android List View",
-                "Adapter implementation",
-                "Simple List View In Android",
-                "Create List View Android",
-                "Android Example",
-                "List View Source Code",
-                "List View Array Adapter",
-                "Android Example List View"
-        };
+
 
         // Define a new Adapter
         // First parameter - Context
@@ -100,7 +95,7 @@ public class LocationPickFragment extends Fragment {
         // Third parameter - ID of the TextView to which the data is written
         // Forth - the Array of data
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, android.R.id.text1, values);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, android.R.id.text1, list_text);
 
 
         // Assign adapter to ListView
@@ -126,7 +121,8 @@ public class LocationPickFragment extends Fragment {
         String[] mProjection =
                 {
                         Contract.Entry._ID,    // Contract class constant for the _ID column name
-                        Contract.Entry.COLUMN_NAME_RESPONSE,   // Contract class constant for the word column name
+                        Contract.Entry.COLUMN_NAME_OBJECTTYPE,
+                        Contract.Entry.COLUMN_NAME_JSON,   // Contract class constant for the word column name
                 };
 
         // Defines a string to contain the selection clause
@@ -142,14 +138,13 @@ public class LocationPickFragment extends Fragment {
         // Does a query against the table and returns a Cursor object
 
         Log.d(TAG, Contract.Entry.CONTENT_URI.toString());
-        Log.d(TAG,mProjection.toString());
-        Log.d(TAG, Contract.Entry.COLUMN_NAME_ENTRY_ID);
+        Log.d(TAG,"mProjection: "+mProjection.toString());
         Cursor mCursor = getActivity().getContentResolver().query(
                 Contract.Entry.CONTENT_URI,  // The content URI of the words table
                 mProjection,                       // The columns to return for each row
                 null,                   // Either null, or the word the user entered
                 null,                    // Either empty, or the string the user entered
-                Contract.Entry.COLUMN_NAME_ENTRY_ID);                       // The sort order for the returned rows
+                Contract.Entry.COLUMN_NAME_OBJECTTYPE);                       // The sort order for the returned rows
 
         // Some providers return null if an error occurs, others throw an exception
         if (null == mCursor) {
@@ -172,13 +167,24 @@ public class LocationPickFragment extends Fragment {
         } else {
             // Insert code here to do something with the results
             mCursor.moveToFirst();
-            Log.d(TAG,"Got results");
-            String response = mCursor.getString(0);
-            Log.d(TAG, response);
-
+            while (mCursor.moveToNext()) {
+                Log.d(TAG,"*****CURSOR MOVED*****");
+                Log.d(TAG, mCursor.getColumnName(0)+": "+mCursor.getString(0));
+                Log.d(TAG, mCursor.getColumnName(1)+": "+mCursor.getString(1));
+                String jsonString = mCursor.getString(2);
+                Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
+                try{
+                    JSONObject location_data = new JSONObject(jsonString);
+                    list_text.add(location_data.get("title").toString());
+                }catch(JSONException e){
+                    Log.d(TAG, e.toString());
+                }
+            }
         }
 
     }
+
+
 
     @Override
     public void onDetach() {

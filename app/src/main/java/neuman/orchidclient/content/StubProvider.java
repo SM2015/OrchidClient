@@ -199,8 +199,8 @@ public class StubProvider extends ContentProvider {
         private static final String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + Contract.Entry.TABLE_NAME + " (" +
                         Contract.Entry._ID + " INTEGER PRIMARY KEY," +
-                        Contract.Entry.COLUMN_NAME_ENTRY_ID + TYPE_TEXT + COMMA_SEP +
-                        Contract.Entry.COLUMN_NAME_RESPONSE    + TYPE_TEXT + ")";
+                        Contract.Entry.COLUMN_NAME_OBJECTTYPE + TYPE_TEXT + COMMA_SEP +
+                        Contract.Entry.COLUMN_NAME_JSON    + TYPE_TEXT + ")";
 
         /** SQL statement to drop "entry" table. */
         private static final String SQL_DELETE_ENTRIES =

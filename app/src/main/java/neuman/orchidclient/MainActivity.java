@@ -79,7 +79,7 @@ public class MainActivity extends Activity {
         mAccountManager = AccountManager.get(this);
         //mAccount = CreateSyncAccount(this);
 
-        mPlanetTitles = new String[]{"Outbox", "Drafts", "Choose Location", "Settings", "Open Web App", "Test"};
+        mPlanetTitles = new String[]{"Sync", "Locationpick", "Add Account", "Get Token", "Open Web App", "Test"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
@@ -191,8 +191,8 @@ public class MainActivity extends Activity {
      * @param authTokenType
      */
     private void getExistingAccountAuthToken(Account account, String authTokenType) {
-        final Account account_2 = account;
-        final String authTokenType_2 = authTokenType;
+        //final Account account_2 = account;
+        //final String authTokenType_2 = authTokenType;
         final AccountManagerFuture<Bundle> future = mAccountManager.getAuthToken(account, authTokenType, null, this, null, null);
 
         new Thread(new Runnable() {
@@ -204,7 +204,7 @@ public class MainActivity extends Activity {
                     final String authtoken = bnd.getString(AccountManager.KEY_AUTHTOKEN);
                     showMessage((authtoken != null) ? "SUCCESS!\ntoken: " + authtoken : "FAIL");
                     Log.d("udinic", "GetToken Bundle is " + bnd);
-                    mAccountManager.setAuthToken(account_2, authTokenType_2, authtoken);
+                    //mAccountManager.setAuthToken(account_2, authTokenType_2, authtoken);
                 } catch (Exception e) {
                     e.printStackTrace();
                     showMessage(e.getMessage());
@@ -331,9 +331,14 @@ public class MainActivity extends Activity {
         else if (position==1){
             launchFragment(new LocationPickFragment());
         }
+        else if (position==2){
+            addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+        }
         else if (position==3){
             showAccountPicker(AUTHTOKEN_TYPE_FULL_ACCESS, false);
         }
+
+
         // update the main content by replacing fragments
         /*
         Fragment fragment = new PlanetFragment();
