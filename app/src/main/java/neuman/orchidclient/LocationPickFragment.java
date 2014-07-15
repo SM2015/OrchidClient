@@ -1,30 +1,27 @@
 package neuman.orchidclient;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
-import android.provider.UserDictionary;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 import neuman.orchidclient.content.Contract;
+import neuman.orchidclient.util.Item;
+import neuman.orchidclient.util.JSONArrayAdapter;
 
 
 /**
@@ -37,12 +34,13 @@ import neuman.orchidclient.content.Contract;
  *
  */
 public class LocationPickFragment extends Fragment {
+    private String TAG = getClass().getSimpleName();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     private ListView listView;
-    private List<String> list_text = new ArrayList<String>();
+    private ArrayList<Item> list_text = new ArrayList<Item>();
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -95,11 +93,24 @@ public class LocationPickFragment extends Fragment {
         // Third parameter - ID of the TextView to which the data is written
         // Forth - the Array of data
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, android.R.id.text1, list_text);
-
+        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, list_text);
 
         // Assign adapter to ListView
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapter, View v, int position,
+                                    long arg3) {
+
+                try{
+                    Item value = (Item) adapter.getItemAtPosition(position);
+                    Log.d(TAG, "Clicked "+value.getJSON().get("title").toString());
+                }catch(JSONException e){
+                    Log.d(TAG, e.toString());
+                }
+            }
+        });
+
         return inflatedView;
     }
 
@@ -175,7 +186,8 @@ public class LocationPickFragment extends Fragment {
                 Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
                 try{
                     JSONObject location_data = new JSONObject(jsonString);
-                    list_text.add(location_data.get("title").toString());
+                    Item newItem = new Item(location_data.get("title").toString(),location_data);
+                    list_text.add(newItem);
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                 }
