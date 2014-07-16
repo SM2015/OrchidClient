@@ -9,7 +9,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.util.Log;
-import neuman.orchidclient.util.SelectionBuilder;
 
 /*
  * Define an implementation of ContentProvider that stubs out
@@ -200,6 +199,7 @@ public class StubProvider extends ContentProvider {
                 "CREATE TABLE " + Contract.Entry.TABLE_NAME + " (" +
                         Contract.Entry._ID + " INTEGER PRIMARY KEY," +
                         Contract.Entry.COLUMN_NAME_OBJECTTYPE + TYPE_TEXT + COMMA_SEP +
+                        Contract.Entry.COLUMN_NAME_MODEL_ID + TYPE_INTEGER + COMMA_SEP +
                         Contract.Entry.COLUMN_NAME_JSON    + TYPE_TEXT + ")";
 
         /** SQL statement to drop "entry" table. */

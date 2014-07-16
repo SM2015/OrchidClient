@@ -19,10 +19,6 @@ import android.content.ContentResolver;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
-import android.content.ContentResolver;
-import android.net.Uri;
-import android.provider.BaseColumns;
-
 public class Contract {
     private Contract() {
     }
@@ -72,9 +68,14 @@ public class Contract {
          */
         public static final String COLUMN_NAME_OBJECTTYPE = "objecttype";
         /**
+         * Model ID
+         */
+        public static final String COLUMN_NAME_MODEL_ID = "model_id";
+        /**
          * JSON response
          */
         public static final String COLUMN_NAME_JSON = "json";
+
 
     }
 }

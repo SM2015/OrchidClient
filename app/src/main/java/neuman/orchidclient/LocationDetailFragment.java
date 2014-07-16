@@ -1,13 +1,16 @@
 package neuman.orchidclient;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 /**
@@ -20,14 +23,14 @@ import android.view.ViewGroup;
  *
  */
 public class LocationDetailFragment extends Fragment {
+    private String TAG = getClass().getSimpleName();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private static final String ARG_PARAM1 = "location_json_string";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private String location_json_string;
+    private JSONObject location_json;
 
     private OnFragmentInteractionListener mListener;
 
@@ -35,16 +38,14 @@ public class LocationDetailFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
+     * @param location_json_string Location object's json.
      * @return A new instance of fragment LocationDetailFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static LocationDetailFragment newInstance(String param1, String param2) {
+    public static LocationDetailFragment newInstance(String location_json_string) {
         LocationDetailFragment fragment = new LocationDetailFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+        args.putString(ARG_PARAM1, location_json_string);
         fragment.setArguments(args);
         return fragment;
     }
@@ -56,8 +57,13 @@ public class LocationDetailFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            location_json_string = getArguments().getString(ARG_PARAM1);
+            try{
+                location_json = new JSONObject(location_json_string);
+                getActivity().getActionBar().setTitle(location_json.get("title").toString());
+            }catch(JSONException e){
+                Log.d(TAG, e.toString());
+            }
         }
     }
 
@@ -78,12 +84,6 @@ public class LocationDetailFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        try {
-            mListener = (OnFragmentInteractionListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
     }
 
     @Override

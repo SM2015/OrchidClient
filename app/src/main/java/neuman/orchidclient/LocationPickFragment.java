@@ -2,6 +2,7 @@ package neuman.orchidclient;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
@@ -103,8 +104,11 @@ public class LocationPickFragment extends Fragment {
                                     long arg3) {
 
                 try{
-                    Item value = (Item) adapter.getItemAtPosition(position);
-                    Log.d(TAG, "Clicked "+value.getJSON().get("title").toString());
+                    Item item = (Item) adapter.getItemAtPosition(position);
+                    Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
+                    FragmentManager fragmentManager = getFragmentManager();
+                    fragmentManager.beginTransaction().replace(R.id.content_frame,LocationDetailFragment.newInstance(item.getJSON().toString())).commit();
+
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                 }

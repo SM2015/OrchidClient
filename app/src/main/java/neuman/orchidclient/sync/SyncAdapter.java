@@ -4,41 +4,26 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
-import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.OperationApplicationException;
 import android.content.SyncResult;
 import android.net.Uri;
 import android.net.http.AndroidHttpClient;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.provider.UserDictionary;
 import android.util.Log;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Random;
 
 import neuman.orchidclient.authentication.AccountGeneral;
 import neuman.orchidclient.content.Contract;
@@ -128,12 +113,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          */
 
         Log.i(TAG, "Beginning network synchronization");
+        drop_contentProvider();
         Log.d(TAG, "account.name: "+account.name);
         Log.d(TAG, "account.type: "+account.type);
         Log.d(TAG, "mAccountManager: "+mAccountManager.toString());
         Log.d(TAG, "AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS: "+AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
         String locationJSON = make_authenticated_request(account, LOCATIONS_URL);
         String indicatorJSON = make_authenticated_request(account, INDICATORS_URL);
+
         JSONObject locationObject = new JSONObject();
         JSONArray locationList = new JSONArray();
         try{
@@ -141,14 +128,28 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         locationList = locationObject.getJSONArray("locations");
         for(int i=0; i < locationList.length(); i++){
             String individual_location_json = locationList.getString(i);
-            insert_into_provider(provider,syncResult,individual_location_json, ObjectTypes.TYPE_LOCATION);
+            Log.d(TAG, "Attempting to insert: "+individual_location_json.toString());
+            JSONObject location_json = new JSONObject(individual_location_json);
+            insert_into_provider(provider,syncResult,individual_location_json, ObjectTypes.TYPE_LOCATION,location_json.getInt("id"));
         }
         }catch(JSONException e){
             Log.d(TAG, e.toString());
         }
 
-
-        insert_into_provider(provider,syncResult,indicatorJSON,ObjectTypes.TYPE_INDICATOR);
+        JSONObject indicatorObject = new JSONObject();
+        JSONArray indicatorList = new JSONArray();
+        try{
+            indicatorObject = new JSONObject(indicatorJSON);
+            indicatorList = indicatorObject.getJSONArray("locations");
+            for(int i=0; i < locationList.length(); i++){
+                String individual_indicator_json = indicatorList.getString(i);
+                Log.d(TAG, "Attempting to insert: "+individual_indicator_json.toString());
+                JSONObject indicator_json = new JSONObject(individual_indicator_json);
+                insert_into_provider(provider,syncResult,individual_indicator_json, ObjectTypes.TYPE_LOCATION,indicator_json.getInt("id"));
+            }
+        }catch(JSONException e){
+            Log.d(TAG, e.toString());
+        }
 
 
         Log.i(TAG, "Network synchronization complete");
@@ -157,7 +158,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     }
 
-    private void insert_into_provider(ContentProviderClient provider, SyncResult syncResult, String value, Integer objecttype){
+    private void drop_contentProvider(){
+        getContext().getContentResolver().delete(Contract.Entry.CONTENT_URI, null, null);
+    }
+
+    private void insert_into_provider(ContentProviderClient provider, SyncResult syncResult, String value, Integer objecttype, Integer model_id){
         try {
             // Defines a new Uri object that receives the result of the insertion
             Uri mNewUri;
@@ -171,6 +176,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          */
             mNewValues.put(Contract.Entry.COLUMN_NAME_OBJECTTYPE, objecttype);
             mNewValues.put(Contract.Entry.COLUMN_NAME_JSON, value);
+            mNewValues.put(Contract.Entry.COLUMN_NAME_MODEL_ID, model_id);
 
 
             mNewUri = provider.insert(
