@@ -1,8 +1,9 @@
 package neuman.orchidclient.authentication;
 
+import android.net.http.AndroidHttpClient;
 import android.util.Log;
+
 import com.google.gson.Gson;
-import neuman.orchidclient.authentication.*;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -10,24 +11,18 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import android.net.http.AndroidHttpClient;
-
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,7 +79,7 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
         Log.d("Parse", "userSignIn");
 
         DefaultHttpClient httpClient = new DefaultHttpClient();
-        String url = "http://192.168.1.127:9292/user/login/";
+        String url = "http://192.168.1.119:9292/user/login/";
 
         Log.i(TAG, "Beginning network sign in");
         String responseString = "no response";

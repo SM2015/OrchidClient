@@ -87,7 +87,6 @@ public class LocationPickFragment extends Fragment {
 
         listView = (ListView) inflatedView.findViewById(R.id.listView);
 
-
         // Define a new Adapter
         // First parameter - Context
         // Second parameter - Layout for the row

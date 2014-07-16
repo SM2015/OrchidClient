@@ -43,8 +43,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
      * <p>This points to the Android Developers Blog. (Side note: We highly recommend reading the
      * Android Developer Blog to stay up to date on the latest Android platform developments!)
      */
-    private static final String LOCATIONS_URL = "http://192.168.1.127:9292/location/list/";
-    private static final String INDICATORS_URL = "http://192.168.1.127:9292/indicator/list/";
+    private static final String LOCATIONS_URL = "http://192.168.1.119:9292/location/list/";
+
+    private static final String INDICATORS_URL = "http://192.168.1.119:9292/indicator/list/";
 
     /**
      * Network connection timeout, in milliseconds.
@@ -118,9 +119,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.d(TAG, "account.type: "+account.type);
         Log.d(TAG, "mAccountManager: "+mAccountManager.toString());
         Log.d(TAG, "AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS: "+AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
-        String locationJSON = make_authenticated_request(account, LOCATIONS_URL);
-        String indicatorJSON = make_authenticated_request(account, INDICATORS_URL);
 
+        String locationJSON = make_authenticated_request(account, LOCATIONS_URL);
         JSONObject locationObject = new JSONObject();
         JSONArray locationList = new JSONArray();
         try{
@@ -136,16 +136,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             Log.d(TAG, e.toString());
         }
 
+        String indicatorJSON = make_authenticated_request(account, INDICATORS_URL);
         JSONObject indicatorObject = new JSONObject();
         JSONArray indicatorList = new JSONArray();
         try{
             indicatorObject = new JSONObject(indicatorJSON);
-            indicatorList = indicatorObject.getJSONArray("locations");
+            indicatorList = indicatorObject.getJSONArray("indicators");
             for(int i=0; i < locationList.length(); i++){
                 String individual_indicator_json = indicatorList.getString(i);
                 Log.d(TAG, "Attempting to insert: "+individual_indicator_json.toString());
                 JSONObject indicator_json = new JSONObject(individual_indicator_json);
-                insert_into_provider(provider,syncResult,individual_indicator_json, ObjectTypes.TYPE_LOCATION,indicator_json.getInt("id"));
+                insert_into_provider(provider,syncResult,individual_indicator_json, ObjectTypes.TYPE_INDICATOR,indicator_json.getInt("id"));
             }
         }catch(JSONException e){
             Log.d(TAG, e.toString());
