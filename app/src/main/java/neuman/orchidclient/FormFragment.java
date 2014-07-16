@@ -3,8 +3,11 @@ package neuman.orchidclient;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.ContentProviderClient;
+import android.content.ContentValues;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,6 +26,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import neuman.orchidclient.content.Contract;
+import neuman.orchidclient.content.ObjectTypes;
 
 
 /**
@@ -45,6 +51,9 @@ public class FormFragment extends Fragment {
     private String incoming_json_string;
     private JSONObject incoming_json;
 
+    private String location_json_string;
+    private JSONObject location_json;
+
     private List fieldList = new ArrayList();
 
     private OnFragmentInteractionListener mListener;
@@ -53,14 +62,16 @@ public class FormFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param incoming_json_string Parameter 1.
+     * @param location_json_string Parameter 1.
+     * @param incoming_json_string Parameter 2.
      * @return A new instance of fragment FormFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static FormFragment newInstance(String incoming_json_string) {
+    public static FormFragment newInstance(String location_json_string, String incoming_json_string) {
         FormFragment fragment = new FormFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, incoming_json_string);
+        args.putString(ARG_PARAM1, location_json_string);
+        args.putString(ARG_PARAM2, incoming_json_string);
         fragment.setArguments(args);
         return fragment;
     }
@@ -72,9 +83,11 @@ public class FormFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            incoming_json_string = getArguments().getString(ARG_PARAM1);
+            incoming_json_string = getArguments().getString(ARG_PARAM2);
+            location_json_string = getArguments().getString(ARG_PARAM1);
             try{
                 incoming_json = new JSONObject(incoming_json_string);
+                location_json = new JSONObject(location_json_string);
                 getActivity().getActionBar().setTitle(incoming_json.get("title").toString());
             }catch(JSONException e){
                 Log.d(TAG, e.toString());
@@ -207,7 +220,13 @@ public class FormFragment extends Fragment {
                 Switch old_switch = (Switch) f;
                 Map valueMap = new HashMap();
                 valueMap.put("name", (String) old_switch.getTag());
-                valueMap.put("value", old_switch.isChecked());
+                if(old_switch.isChecked()){
+                    valueMap.put("value", "on");
+                }
+                else{
+                    valueMap.put("value", "off");
+                }
+
                 switch_values.add(valueMap);
             }
             else if (f instanceof EditText) {
@@ -221,8 +240,45 @@ public class FormFragment extends Fragment {
         }
         Map outputMap = new HashMap();
         outputMap.put("values", switch_values);
+        try{
+            outputMap.put("outgoing_url", "http://192.168.1.119:9292/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_json.getInt("id")).toString()+"/record/create/");
+        }catch(JSONException e){
+            Log.d(TAG, e.toString());
+        }
         JSONObject outputJSON = new JSONObject(outputMap);
         Log.d("valueJSON", outputJSON.toString());
+        insert_into_provider(getActivity().getContentResolver().acquireContentProviderClient(Contract.Entry.CONTENT_URI),outputJSON.toString(), ObjectTypes.TYPE_RECORD,-1);
+
     }
+
+    public void insert_into_provider(ContentProviderClient provider, String json, Integer objecttype, Integer model_id){
+        try {
+            // Defines a new Uri object that receives the result of the insertion
+            Uri mNewUri;
+
+            // Defines an object to contain the new values to insert
+            ContentValues mNewValues = new ContentValues();
+
+        /*
+         * Sets the values of each column and inserts the word. The arguments to the "put"
+         * method are "column name" and "value"
+         */
+            mNewValues.put(Contract.Entry.COLUMN_NAME_OBJECTTYPE, objecttype);
+            mNewValues.put(Contract.Entry.COLUMN_NAME_JSON, json);
+            mNewValues.put(Contract.Entry.COLUMN_NAME_MODEL_ID, model_id);
+
+
+            mNewUri = provider.insert(
+                    Contract.Entry.CONTENT_URI,   // the user dictionary content URI
+                    mNewValues                          // the values to insert
+            );
+
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error updating database: " + e.toString());
+            return;
+        }
+    }
+
+
 
 }
