@@ -109,7 +109,7 @@ public class LocationDetailFragment extends Fragment {
                     Item item = (Item) adapter.getItemAtPosition(position);
                     Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
                     FragmentManager fragmentManager = getFragmentManager();
-                    fragmentManager.beginTransaction().replace(R.id.content_frame,LocationDetailFragment.newInstance(item.getJSON().toString())).commit();
+                    fragmentManager.beginTransaction().replace(R.id.content_frame,FormFragment.newInstance(item.getJSON().toString())).commit();
 
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
@@ -180,7 +180,6 @@ public class LocationDetailFragment extends Fragment {
 
         } else {
             // Insert code here to do something with the results
-            mCursor.moveToFirst();
             while (mCursor.moveToNext()) {
                 Log.d(TAG,"*****CURSOR MOVED*****");
                 Log.d(TAG, mCursor.getColumnName(0)+": "+mCursor.getString(0));

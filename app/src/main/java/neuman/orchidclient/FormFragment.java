@@ -1,12 +1,10 @@
 package neuman.orchidclient;
 //icon from http://raindropmemory.deviantart.com
 
-import android.app.ActionBar;
 import android.app.Activity;
+import android.app.Fragment;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
-import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,15 +12,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,14 +35,15 @@ import java.util.Map;
  *
  */
 public class FormFragment extends Fragment {
+    private String TAG = getClass().getSimpleName();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private String incoming_json_string;
+    private JSONObject incoming_json;
 
     private List fieldList = new ArrayList();
 
@@ -54,16 +53,14 @@ public class FormFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
+     * @param incoming_json_string Parameter 1.
      * @return A new instance of fragment FormFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static FormFragment newInstance(String param1, String param2) {
+    public static FormFragment newInstance(String incoming_json_string) {
         FormFragment fragment = new FormFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+        args.putString(ARG_PARAM1, incoming_json_string);
         fragment.setArguments(args);
         return fragment;
     }
@@ -75,8 +72,13 @@ public class FormFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            incoming_json_string = getArguments().getString(ARG_PARAM1);
+            try{
+                incoming_json = new JSONObject(incoming_json_string);
+                getActivity().getActionBar().setTitle(incoming_json.get("title").toString());
+            }catch(JSONException e){
+                Log.d(TAG, e.toString());
+            }
         }
     }
 
@@ -89,37 +91,56 @@ public class FormFragment extends Fragment {
 
         LinearLayout layout = (LinearLayout) inflatedView.findViewById(R.id.FieldsLinearLayout);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
-        String[] switch_names = {"Alpha", "Beta", "Gamma"};
-        for (String name : switch_names)
-        {
-            Switch new_switch = new Switch(getActivity());
-            new_switch.setText(name);
-            new_switch.setTag(name);
-            layout.addView(getLinearLayout(new_switch, ""),layoutParams);
 
-            fieldList.add(new_switch);
-        }
-        String[] text_names = {"Delta", "Epsilon", "Zeta"};
-        for (String name : text_names)
-        {
-            EditText new_edit = new EditText(getActivity());
-            new_edit.setTag(name);
-            layout.addView(getLinearLayout(new_edit, name),layoutParams);
+        try{
+            JSONObject form_json = incoming_json.getJSONObject("form");
+            Log.d(TAG, "form_json: "+form_json.toString());
+            JSONObject fieldsList = form_json.getJSONObject("fields");
+            Log.d(TAG, "fieldsList json: "+fieldsList.toString());
 
-            fieldList.add(new_edit);
-        }
-        String[] multi_names = {"Eta", "Theta", "Iota"};
-        for (String name : multi_names)
-        {
-            EditText new_edit = new EditText(getActivity());
-            new_edit.setTag(name);
-            new_edit.setMaxLines(5);
-            new_edit.setLines(5);
-            new_edit.setSingleLine(false);
-            layout.addView(getLinearLayout(new_edit, name),layoutParams);
 
-            fieldList.add(new_edit);
+            Iterator<?> keys = fieldsList.keys();
+
+            while( keys.hasNext() ){
+                String key = (String)keys.next();
+                if( fieldsList.get(key) instanceof JSONObject ){
+                    JSONObject field = (JSONObject) fieldsList.get(key);
+                    Log.d(TAG, "field: "+fieldsList.get(key).toString());
+                    String label = field.getString("label");
+                    String input_type = field.getJSONObject("widget").getString("input_type");
+                    Log.d(TAG, "input_type: "+input_type);
+                    if (input_type.equals("checkbox")){
+                        Log.d(TAG, "IS CHECKBOX");
+                        Switch new_switch = new Switch(getActivity());
+                        new_switch.setText(label);
+                        new_switch.setTag(key);
+                        layout.addView(getLinearLayout(new_switch, ""),layoutParams);
+                        fieldList.add(new_switch);
+                    }
+                    else if (input_type.equals("text")){
+                        Log.d(TAG, "IS TEXT");
+                        EditText new_edit = new EditText(getActivity());
+                        new_edit.setTag(key);
+                        layout.addView(getLinearLayout(new_edit, label),layoutParams);
+                        fieldList.add(new_edit);
+                    }
+                    else if (input_type.equals("textarea")){
+                        Log.d(TAG, "IS TEXTAREA");
+                        EditText new_textarea = new EditText(getActivity());
+                        new_textarea.setTag(key);
+                        new_textarea.setMaxLines(5);
+                        new_textarea.setLines(5);
+                        new_textarea.setSingleLine(false);
+                        layout.addView(getLinearLayout(new_textarea, label),layoutParams);
+                        fieldList.add(new_textarea);
+                    }
+                }
+            }
+
+        }catch(JSONException e){
+            Log.d(TAG, e.toString());
         }
+
         Button submit_button = new Button(getActivity());
         submit_button.setText("Submit");
         layout.addView(submit_button, layoutParams);

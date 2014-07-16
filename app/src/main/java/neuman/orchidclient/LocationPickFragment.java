@@ -21,6 +21,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import neuman.orchidclient.content.Contract;
+import neuman.orchidclient.content.ObjectTypes;
 import neuman.orchidclient.util.Item;
 import neuman.orchidclient.util.JSONArrayAdapter;
 
@@ -140,7 +141,7 @@ public class LocationPickFragment extends Fragment {
                 };
 
         // Defines a string to contain the selection clause
-        String mSelectionClause = null;
+        String mSelectionClause =  Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+ ObjectTypes.TYPE_LOCATION;
 
         // Initializes an array to contain selection arguments
         String[] mSelectionArgs = {""};
@@ -156,7 +157,7 @@ public class LocationPickFragment extends Fragment {
         Cursor mCursor = getActivity().getContentResolver().query(
                 Contract.Entry.CONTENT_URI,  // The content URI of the words table
                 mProjection,                       // The columns to return for each row
-                null,                   // Either null, or the word the user entered
+                mSelectionClause,                   // Either null, or the word the user entered
                 null,                    // Either empty, or the string the user entered
                 Contract.Entry.COLUMN_NAME_OBJECTTYPE);                       // The sort order for the returned rows
 
@@ -180,7 +181,6 @@ public class LocationPickFragment extends Fragment {
 
         } else {
             // Insert code here to do something with the results
-            mCursor.moveToFirst();
             while (mCursor.moveToNext()) {
                 Log.d(TAG,"*****CURSOR MOVED*****");
                 Log.d(TAG, mCursor.getColumnName(0)+": "+mCursor.getString(0));
