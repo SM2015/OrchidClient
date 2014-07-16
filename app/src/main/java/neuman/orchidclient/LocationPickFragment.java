@@ -193,6 +193,7 @@ public class LocationPickFragment extends Fragment {
                     list_text.add(newItem);
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
+                    e.printStackTrace();
                 }
             }
         }

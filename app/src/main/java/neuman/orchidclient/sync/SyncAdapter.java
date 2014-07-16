@@ -127,7 +127,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.d(TAG, "AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS: "+AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
 
 
-        //drop_contentProvider();
+        drop_contentProvider_model(ObjectTypes.TYPE_LOCATION);
+        drop_contentProvider_model(ObjectTypes.TYPE_INDICATOR);
 
         String locationJSON = make_authenticated_request(account, LOCATIONS_URL);
         JSONObject locationObject = new JSONObject();
@@ -164,14 +165,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         push_new_records(getContext().getContentResolver(),account);
+        drop_contentProvider_model(ObjectTypes.TYPE_RECORD);
         Log.i(TAG, "Network synchronization complete");
 
 
 
     }
 
-    private void drop_contentProvider(){
-        getContext().getContentResolver().delete(Contract.Entry.CONTENT_URI, null, null);
+    private void drop_contentProvider_model(Integer objectType){
+        // Defines a string to contain the selection clause
+        String mSelectionClause =  Contract.Entry.COLUMN_NAME_OBJECTTYPE+" ="+ objectType;
+        getContext().getContentResolver().delete(Contract.Entry.CONTENT_URI, mSelectionClause, null);
     }
 
     public void insert_into_provider(ContentProviderClient provider, SyncResult syncResult, String value, Integer objecttype, Integer model_id){

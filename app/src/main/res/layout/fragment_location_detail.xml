@@ -3,39 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="neuman.orchidclient.LocationDetailFragment">
-    <ScrollView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:id="@+id/scrollView"
-        android:layout_gravity="top" >
-        <RelativeLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center_horizontal|top"
-            android:id="@+id/ScrollingLinearLayout">
-
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_gravity="center"
-                android:id="@+id/FieldsLinearLayout"
-                android:gravity="top">
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="bottom">
-                <ListView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/listView"
-                android:layout_gravity="center_horizontal|top" />
-            </LinearLayout>
-
-        </RelativeLayout>
-    </ScrollView>
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/listView"
+        android:layout_gravity="center_horizontal|top" />
 </FrameLayout>

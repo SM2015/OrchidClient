@@ -143,10 +143,6 @@ public class LocationDetailFragment extends Fragment {
         // Defines a string to contain the selection clause
         String mSelectionClause =  Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+ObjectTypes.TYPE_INDICATOR;
 
-        // Initializes an array to contain selection arguments
-        String[] mSelectionArgs = {ObjectTypes.TYPE_INDICATOR.toString()};
-
-
 
         ContentResolver contentResolver = getActivity().getContentResolver();
         // Does a query against the table and returns a Cursor object
@@ -192,6 +188,7 @@ public class LocationDetailFragment extends Fragment {
                     list_text.add(newItem);
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
+                    e.printStackTrace();
                 }
             }
         }
