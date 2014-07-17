@@ -3,7 +3,6 @@ package neuman.orchidclient;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -20,7 +19,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import neuman.orchidclient.content.Contract;
+import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
 import neuman.orchidclient.util.Item;
 import neuman.orchidclient.util.JSONArrayAdapter;
@@ -41,6 +40,7 @@ public class LocationPickFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    private ContentQueryMaker contentQueryMaker;
     private ListView listView;
     private ArrayList<Item> list_text = new ArrayList<Item>();
 
@@ -94,6 +94,8 @@ public class LocationPickFragment extends Fragment {
         // Third parameter - ID of the TextView to which the data is written
         // Forth - the Array of data
 
+
+
         JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, list_text);
 
         // Assign adapter to ListView
@@ -107,7 +109,7 @@ public class LocationPickFragment extends Fragment {
                     Item item = (Item) adapter.getItemAtPosition(position);
                     Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
                     FragmentManager fragmentManager = getFragmentManager();
-                    fragmentManager.beginTransaction().replace(R.id.content_frame,LocationDetailFragment.newInstance(item.getJSON().toString())).addToBackStack(null).commit();
+                    fragmentManager.beginTransaction().replace(R.id.content_frame, LocationDetailFragment.newInstance(item.getJSON().toString())).addToBackStack(null).commit();
 
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
@@ -129,37 +131,8 @@ public class LocationPickFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        String TAG = "sync";
-        Log.d("location pick", "Made it");
-
-        // A "projection" defines the columns that will be returned for each row
-        String[] mProjection =
-                {
-                        Contract.Entry._ID,    // Contract class constant for the _ID column name
-                        Contract.Entry.COLUMN_NAME_OBJECTTYPE,
-                        Contract.Entry.COLUMN_NAME_JSON,   // Contract class constant for the word column name
-                };
-
-        // Defines a string to contain the selection clause
-        String mSelectionClause =  Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+ ObjectTypes.TYPE_LOCATION;
-
-        // Initializes an array to contain selection arguments
-        String[] mSelectionArgs = {""};
-
-        // Remember to insert code here to check for invalid or malicious input.
-
-
-        ContentResolver contentResolver = getActivity().getContentResolver();
-        // Does a query against the table and returns a Cursor object
-
-        Log.d(TAG, Contract.Entry.CONTENT_URI.toString());
-        Log.d(TAG,"mProjection: "+mProjection.toString());
-        Cursor mCursor = getActivity().getContentResolver().query(
-                Contract.Entry.CONTENT_URI,  // The content URI of the words table
-                mProjection,                       // The columns to return for each row
-                mSelectionClause,                   // Either null, or the word the user entered
-                null,                    // Either empty, or the string the user entered
-                Contract.Entry.COLUMN_NAME_OBJECTTYPE);                       // The sort order for the returned rows
+        contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
+        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_LOCATION);
 
         // Some providers return null if an error occurs, others throw an exception
         if (null == mCursor) {

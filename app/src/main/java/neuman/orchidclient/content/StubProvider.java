@@ -15,6 +15,7 @@ import android.util.Log;
  * all methods
  */
 public class StubProvider extends ContentProvider {
+    private String TAG = getClass().getSimpleName();
     Database mDatabaseHelper;
     /**
      * Content authority for this provider.
@@ -78,6 +79,8 @@ public class StubProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
     }
+
+
 
     /**
      * Insert a new entry into the database.

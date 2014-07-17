@@ -311,20 +311,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         String cookiestring = "sessionid="+authtoken;
                         Log.d(TAG,"Cookiestring: "+cookiestring);
                         request.addHeader("Cookie", cookiestring);
-                        Log.d(TAG,"uno");
                         List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
                         JSONArray values_json_array = record_data.getJSONArray("values");
                         for(int i=0; i < values_json_array.length(); i++){
                             JSONObject val = (JSONObject) values_json_array.get(i);
                             nameValuePairs.add(new BasicNameValuePair(val.getString("name"), val.getString("value")));
                         }
-                        Log.d(TAG,"dos");
                         request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-                        Log.d(TAG,"tres");
                         HttpResponse response = httpclient.execute(request);
-                        Log.d(TAG,"quatro");
                         StatusLine statusLine = response.getStatusLine();
-                        Log.d(TAG,"cinco");
                         if(statusLine.getStatusCode() == HttpStatus.SC_OK){
                             ByteArrayOutputStream out = new ByteArrayOutputStream();
                             response.getEntity().writeTo(out);
@@ -337,7 +332,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                             response.getEntity().getContent().close();
                             throw new IOException(statusLine.getReasonPhrase());
                         }
-                        Log.d(TAG,"ses");
 
                     }catch(Exception e){
                         Log.d("HTTP exception", e.toString());
