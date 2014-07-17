@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import neuman.orchidclient.authentication.AccountGeneral;
+import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.Contract;
 import neuman.orchidclient.content.ObjectTypes;
 
@@ -46,6 +47,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private String TAG = getClass().getSimpleName();
     private AccountManager mAccountManager;
+    private ContentQueryMaker contentQueryMaker;
     /**
      * URL to fetch content from during a sync.
      *
@@ -83,6 +85,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          */
         mContentResolver = context.getContentResolver();
         mAccountManager = AccountManager.get(context);
+        contentQueryMaker = new ContentQueryMaker(context.getContentResolver());
         Log.d("SYNC","SyncAdapter autoInitializer");
     }
 
@@ -133,8 +136,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         String hostname = settings.getString("example_text", "NO HOSTNAME");
 
 
-        drop_contentProvider_model(ObjectTypes.TYPE_LOCATION);
-        drop_contentProvider_model(ObjectTypes.TYPE_INDICATOR);
+        contentQueryMaker.drop_contentProvider_model(ObjectTypes.TYPE_LOCATION);
+        contentQueryMaker.drop_contentProvider_model(ObjectTypes.TYPE_INDICATOR);
 
         String locationJSON = make_authenticated_request(account, hostname+LOCATIONS_URL);
         JSONObject locationObject = new JSONObject();
@@ -171,18 +174,13 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         push_new_records(getContext().getContentResolver(),account);
-        drop_contentProvider_model(ObjectTypes.TYPE_RECORD);
+        contentQueryMaker.drop_contentProvider_model(ObjectTypes.TYPE_RECORD);
         Log.i(TAG, "Network synchronization complete");
 
 
 
     }
 
-    private void drop_contentProvider_model(Integer objectType){
-        // Defines a string to contain the selection clause
-        String mSelectionClause =  Contract.Entry.COLUMN_NAME_OBJECTTYPE+" ="+ objectType;
-        getContext().getContentResolver().delete(Contract.Entry.CONTENT_URI, mSelectionClause, null);
-    }
 
     public void insert_into_provider(ContentProviderClient provider, SyncResult syncResult, String value, Integer objecttype, Integer model_id){
         try {

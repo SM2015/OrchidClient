@@ -41,4 +41,16 @@ public class ContentQueryMaker {
         return mCursor;
     }
 
+    public void drop_contentProvider_model(Integer objectType){
+        // Defines a string to contain the selection clause
+        String mSelectionClause =  Contract.Entry.COLUMN_NAME_OBJECTTYPE+" ="+ objectType;
+        contentResolver.delete(Contract.Entry.CONTENT_URI, mSelectionClause, null);
+    }
+
+    public void drop_all_tables(){
+        drop_contentProvider_model(ObjectTypes.TYPE_RECORD);
+        drop_contentProvider_model(ObjectTypes.TYPE_INDICATOR);
+        drop_contentProvider_model(ObjectTypes.TYPE_LOCATION);
+    }
+
 }

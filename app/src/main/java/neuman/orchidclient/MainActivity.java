@@ -30,6 +30,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import neuman.orchidclient.authentication.AccountGeneral;
+import neuman.orchidclient.content.ContentQueryMaker;
 
 import static neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS;
 
@@ -58,6 +59,7 @@ public class MainActivity extends Activity {
     private String TAG = this.getClass().getSimpleName();
 
     private AccountManager mAccountManager;
+    private ContentQueryMaker contentQueryMaker;
     private AlertDialog mAlertDialog;
     private boolean mInvalidate;
 
@@ -72,9 +74,14 @@ public class MainActivity extends Activity {
                     .commit();
         }
         mAccountManager = AccountManager.get(this);
-        //mAccount = CreateSyncAccount(this);
+        contentQueryMaker = new ContentQueryMaker(this.getContentResolver());
+        final Account availableAccounts[] = mAccountManager.getAccountsByType(AccountGeneral.ACCOUNT_TYPE);
 
-        mPlanetTitles = new String[]{"Sync", "Locationpick", "Add Account", "Get Token", "Open Web App", "Test", "Settings"};
+        if (availableAccounts.length == 0) {
+            launchLogin();
+        }
+
+        mPlanetTitles = new String[]{"Sync", "Locationpick", "Logout", "Get Token", "Open Web App", "Test", "Settings"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
@@ -125,13 +132,18 @@ public class MainActivity extends Activity {
 
     }
     private void addNewAccount(String accountType, String authTokenType) {
+
+
         final AccountManagerFuture<Bundle> future = mAccountManager.addAccount(accountType, authTokenType, null, null, this, new AccountManagerCallback<Bundle>() {
             @Override
             public void run(AccountManagerFuture<Bundle> future) {
                 try {
                     Bundle bnd = future.getResult();
                     showMessage("Account was created");
-                    Log.d("udinic", "AddNewAccount Bundle is " + bnd);
+                    Log.d(TAG, "AddNewAccount Bundle is " + bnd);
+
+                    autoAuthenticate(AUTHTOKEN_TYPE_FULL_ACCESS, false);
+                    attemptSync();
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -146,6 +158,14 @@ public class MainActivity extends Activity {
         if (mAlertDialog != null && mAlertDialog.isShowing()) {
             outState.putBoolean(STATE_DIALOG, true);
             outState.putBoolean(STATE_INVALIDATE, mInvalidate);
+        }
+    }
+
+    private void logOutAccount(){
+
+        final Account availableAccounts[] = mAccountManager.getAccountsByType(AccountGeneral.ACCOUNT_TYPE);
+        for( Account account: availableAccounts){
+            mAccountManager.removeAccount(account,null,null);
         }
     }
 
@@ -180,6 +200,26 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void autoAuthenticate(final String authTokenType, final boolean invalidate) {
+        mInvalidate = invalidate;
+        final Account availableAccounts[] = mAccountManager.getAccountsByType(AccountGeneral.ACCOUNT_TYPE);
+
+        if (availableAccounts.length == 0) {
+            Toast.makeText(this, "No accounts", Toast.LENGTH_SHORT).show();
+        } else {
+            String name[] = new String[availableAccounts.length];
+            for (int i = 0; i < availableAccounts.length; i++) {
+                name[i] = availableAccounts[i].name;
+            }
+
+            //there should only ever be 1 account
+            if(invalidate)
+                invalidateAuthToken(availableAccounts[0], authTokenType);
+            else
+                getExistingAccountAuthToken(availableAccounts[0], authTokenType);
+        }
+    }
+
     /**
      * Get the auth token for an existing account on the AccountManager
      * @param account
@@ -198,7 +238,7 @@ public class MainActivity extends Activity {
 
                     final String authtoken = bnd.getString(AccountManager.KEY_AUTHTOKEN);
                     showMessage((authtoken != null) ? "SUCCESS!\ntoken: " + authtoken : "FAIL");
-                    Log.d("udinic", "GetToken Bundle is " + bnd);
+                    Log.d(TAG, "GetToken Bundle is " + bnd);
                     //mAccountManager.setAuthToken(account_2, authTokenType_2, authtoken);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -234,34 +274,6 @@ public class MainActivity extends Activity {
         }).start();
     }
 
-    /**
-     * Get an auth token for the account.
-     * If not exist - add it and then return its auth token.
-     * If one exist - return its auth token.
-     * If more than one exists - show a picker and return the select account's auth token.
-     * @param accountType
-     * @param authTokenType
-     */
-    private void getTokenForAccountCreateIfNeeded(String accountType, String authTokenType) {
-        final AccountManagerFuture<Bundle> future = mAccountManager.getAuthTokenByFeatures(accountType, authTokenType, null, this, null, null,
-                new AccountManagerCallback<Bundle>() {
-                    @Override
-                    public void run(AccountManagerFuture<Bundle> future) {
-                        Bundle bnd = null;
-                        try {
-                            bnd = future.getResult();
-                            final String authtoken = bnd.getString(AccountManager.KEY_AUTHTOKEN);
-                            showMessage(((authtoken != null) ? "SUCCESS!\ntoken: " + authtoken : "FAIL"));
-                            Log.d("udinic", "GetTokenForAccount Bundle is " + bnd);
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            showMessage(e.getMessage());
-                        }
-                    }
-                }
-                , null);
-    }
     private void showMessage(final String msg) {
         if (TextUtils.isEmpty(msg))
             return;
@@ -303,31 +315,56 @@ public class MainActivity extends Activity {
         fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
     }
 
-    private void selectItem(int position) {
-        Log.d("drawer",new Integer(position).toString());
-        if (position==5){
-            launchFragment(new FormFragment());
-        }
-        else if (position==0){
-            Log.d("drawer", "should sync");
-            // Pass the settings flags by inserting them in a bundle
-            Bundle settingsBundle = new Bundle();
-            settingsBundle.putBoolean(
-                    ContentResolver.SYNC_EXTRAS_MANUAL, true);
-            settingsBundle.putBoolean(
-                    ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+    private void attemptSync(){
+        Log.d("drawer", "should sync");
+        // Pass the settings flags by inserting them in a bundle
+        Bundle settingsBundle = new Bundle();
+        settingsBundle.putBoolean(
+                ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        settingsBundle.putBoolean(
+                ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
                     /*
                      * Request the sync for the default account, authority, and
                      * manual sync settings
                      */
-            ContentResolver.requestSync(mAccount, AUTHORITY, settingsBundle);
+        ContentResolver.requestSync(mAccount, AUTHORITY, settingsBundle);
+    }
 
+    private void launchLogin(){
+        addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+    }
+
+    private void selectItem(int position) {
+        Log.d("drawer",new Integer(position).toString());
+        if (position==0){
+            attemptSync();
         }
         else if (position==1){
             launchFragment(new LocationPickFragment());
         }
         else if (position==2){
-            addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    switch (which){
+                        case DialogInterface.BUTTON_POSITIVE:
+                            //Yes button clicked
+                            logOutAccount();
+                            contentQueryMaker.drop_all_tables();
+                            launchLogin();
+                            break;
+
+                        case DialogInterface.BUTTON_NEGATIVE:
+                            //No button clicked
+                            break;
+                    }
+                }
+            };
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Are you sure you want to log out?  Doing so will delete any records that have not been synchronized.  You will not be able to use this app until you log back in while connected to a network.").setPositiveButton("Yes", dialogClickListener)
+                    .setNegativeButton("No", dialogClickListener).show();
+
         }
         else if (position==3){
             showAccountPicker(AUTHTOKEN_TYPE_FULL_ACCESS, false);
