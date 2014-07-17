@@ -5,9 +5,11 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -241,7 +243,9 @@ public class FormFragment extends Fragment {
         Map outputMap = new HashMap();
         outputMap.put("values", switch_values);
         try{
-            outputMap.put("outgoing_url", "http://192.168.1.119:9292/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_json.getInt("id")).toString()+"/record/create/");
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String hostname = settings.getString("example_text", "NO HOSTNAME");
+            outputMap.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_json.getInt("id")).toString()+"/record/create/");
         }catch(JSONException e){
             Log.d(TAG, e.toString());
         }

@@ -7,12 +7,14 @@ import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.SyncResult;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.http.AndroidHttpClient;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.apache.http.HttpResponse;
@@ -50,9 +52,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
      * <p>This points to the Android Developers Blog. (Side note: We highly recommend reading the
      * Android Developer Blog to stay up to date on the latest Android platform developments!)
      */
-    private static final String LOCATIONS_URL = "http://192.168.1.119:9292/location/list/";
+    private static final String LOCATIONS_URL = "/location/list/";
 
-    private static final String INDICATORS_URL = "http://192.168.1.119:9292/indicator/list/";
+    private static final String INDICATORS_URL = "/indicator/list/";
 
     /**
      * Network connection timeout, in milliseconds.
@@ -127,10 +129,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.d(TAG, "AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS: "+AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
 
 
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String hostname = settings.getString("example_text", "NO HOSTNAME");
+
+
         drop_contentProvider_model(ObjectTypes.TYPE_LOCATION);
         drop_contentProvider_model(ObjectTypes.TYPE_INDICATOR);
 
-        String locationJSON = make_authenticated_request(account, LOCATIONS_URL);
+        String locationJSON = make_authenticated_request(account, hostname+LOCATIONS_URL);
         JSONObject locationObject = new JSONObject();
         JSONArray locationList = new JSONArray();
         try{
@@ -147,7 +153,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             e.printStackTrace();
         }
 
-        String indicatorJSON = make_authenticated_request(account, INDICATORS_URL);
+        String indicatorJSON = make_authenticated_request(account, hostname+INDICATORS_URL);
         JSONObject indicatorObject = new JSONObject();
         JSONArray indicatorList = new JSONArray();
         try{

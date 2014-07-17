@@ -10,11 +10,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-import neuman.orchidclient.R;
-import neuman.orchidclient.authentication.*;
-import neuman.orchidclient.authentication.SignUpActivity;
 
-import static neuman.orchidclient.authentication.AccountGeneral.sServerAuthenticate;
+import neuman.orchidclient.R;
 
 /**
  * The Authenticator activity.
@@ -104,7 +101,9 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
                 String authtoken = null;
                 Bundle data = new Bundle();
                 try {
-                    authtoken = sServerAuthenticate.userSignIn(userName, userPass, mAuthTokenType);
+                    ParseComServerAuthenticate serverAuthenticate = new ParseComServerAuthenticate(getApplicationContext());
+
+                    authtoken = serverAuthenticate.userSignIn(userName, userPass, mAuthTokenType);
 
                     data.putString(AccountManager.KEY_ACCOUNT_NAME, userName);
                     data.putString(AccountManager.KEY_ACCOUNT_TYPE, accountType);

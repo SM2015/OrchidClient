@@ -1,23 +1,21 @@
 package neuman.orchidclient.authentication;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.http.AndroidHttpClient;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.google.gson.Gson;
-
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -36,42 +34,19 @@ import java.util.List;
 public class ParseComServerAuthenticate implements neuman.orchidclient.authentication.ServerAuthenticate {
 
     private String TAG = "Parse";
+    private Context context;
+    private SharedPreferences prefs;
+
+    public ParseComServerAuthenticate(Context context_in){
+
+        context = context_in;
+    }
+
     @Override
     public String userSignUp(String name, String email, String pass, String authType) throws Exception {
-
-        String url = "https://api.parse.com/1/users";
-
-        DefaultHttpClient httpClient = new DefaultHttpClient();
-        HttpPost httpPost = new HttpPost(url);
-
-        httpPost.addHeader("X-Parse-Application-Id","XUafJTkPikD5XN5HxciweVuSe12gDgk2tzMltOhr");
-        httpPost.addHeader("X-Parse-REST-API-Key", "8L9yTQ3M86O4iiucwWb4JS7HkxoSKo7ssJqGChWx");
-        httpPost.addHeader("Content-Type", "application/json");
-
-        String user = "{\"username\":\"" + email + "\",\"password\":\"" + pass + "\",\"phone\":\"415-392-0202\"}";
-        HttpEntity entity = new StringEntity(user);
-        httpPost.setEntity(entity);
-
-        String authtoken = null;
-        try {
-            HttpResponse response = httpClient.execute(httpPost);
-            String responseString = EntityUtils.toString(response.getEntity());
-
-            if (response.getStatusLine().getStatusCode() != 201) {
-                ParseComError error = new Gson().fromJson(responseString, ParseComError.class);
-                throw new Exception("Error creating user["+error.code+"] - " + error.error);
-            }
-
-
-            User createdUser = new Gson().fromJson(responseString, User.class);
-
-            authtoken = createdUser.sessionToken;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return authtoken;
+        //Dummy to fulfil the requirement of the interface
+        //this app does not allow signup in the android client
+        return null;
     }
 
     @Override
@@ -79,7 +54,9 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
         Log.d("Parse", "userSignIn");
 
         DefaultHttpClient httpClient = new DefaultHttpClient();
-        String url = "http://192.168.1.119:9292/user/login/";
+        String url = "/user/login/";
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
+        String hostname = settings.getString("example_text", "NO HOSTNAME");
 
         Log.i(TAG, "Beginning network sign in");
         String responseString = "no response";
@@ -87,14 +64,15 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
         try {
 
             AndroidHttpClient httpclient = AndroidHttpClient.newInstance("Android");
-            HttpPost request = new HttpPost(url);
+            Log.d(TAG, "POSTING REQUEST TO: "+hostname+url);
+            HttpPost request = new HttpPost(hostname+url);
             request.setHeader("X_REQUESTED_WITH", "XMLHttpRequest");
             HttpParams params = new BasicHttpParams();
             //params.setParameter("email", user);
             //params.setParameter("password", pass);
             //request.setParams(params);
 
-            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+            List <NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
             nameValuePairs.add(new BasicNameValuePair("email", user));
             nameValuePairs.add(new BasicNameValuePair("password", pass));
             request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
@@ -124,9 +102,12 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
 
 
 
+
         }catch(Exception e){
             Log.d("HTTP exception", e.toString());
         }
+        httpClient = null;
+
 
 
 //        httpGet.getParams().setParameter("username", user).setParameter("password", pass);

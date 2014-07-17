@@ -9,10 +9,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-import neuman.orchidclient.R;
-import neuman.orchidclient.authentication.*;
 
-import static neuman.orchidclient.authentication.AccountGeneral.sServerAuthenticate;
+import neuman.orchidclient.R;
+
 import static neuman.orchidclient.authentication.AuthenticatorActivity.ARG_ACCOUNT_TYPE;
 import static neuman.orchidclient.authentication.AuthenticatorActivity.KEY_ERROR_MESSAGE;
 import static neuman.orchidclient.authentication.AuthenticatorActivity.PARAM_USER_PASS;
@@ -70,7 +69,8 @@ public class SignUpActivity extends Activity {
                 String authtoken = null;
                 Bundle data = new Bundle();
                 try {
-                    authtoken = sServerAuthenticate.userSignUp(name, accountName, accountPassword, neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+                    ParseComServerAuthenticate serverAuthenticate = new ParseComServerAuthenticate(getApplicationContext());
+                    authtoken = serverAuthenticate.userSignUp(name, accountName, accountPassword, neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
 
                     data.putString(AccountManager.KEY_ACCOUNT_NAME, accountName);
                     data.putString(AccountManager.KEY_ACCOUNT_TYPE, mAccountType);

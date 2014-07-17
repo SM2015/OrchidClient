@@ -1,16 +1,21 @@
 package neuman.orchidclient.authentication;
 
-import android.accounts.*;
+import android.accounts.AbstractAccountAuthenticator;
+import android.accounts.Account;
+import android.accounts.AccountAuthenticatorResponse;
+import android.accounts.AccountManager;
+import android.accounts.NetworkErrorException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
-import neuman.orchidclient.authentication.*;
-
 import static android.accounts.AccountManager.KEY_BOOLEAN_RESULT;
-import static neuman.orchidclient.authentication.AccountGeneral.*;
+import static neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS;
+import static neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS_LABEL;
+import static neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_READ_ONLY;
+import static neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_READ_ONLY_LABEL;
 
 /**
  * Created with IntelliJ IDEA.
@@ -72,7 +77,8 @@ public class UdinicAuthenticator extends AbstractAccountAuthenticator {
             if (password != null) {
                 try {
                     Log.d("udinic", TAG + "> re-authenticating with the existing password");
-                    authToken = sServerAuthenticate.userSignIn(account.name, password, authTokenType);
+                    ParseComServerAuthenticate serverAuthenticate = new ParseComServerAuthenticate(mContext);
+                    authToken = serverAuthenticate.userSignIn(account.name, password, authTokenType);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

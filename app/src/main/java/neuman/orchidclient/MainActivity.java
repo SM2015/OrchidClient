@@ -5,7 +5,6 @@ import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.app.Activity;
-import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -13,30 +12,26 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.os.Build;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.support.v4.app.ActionBarDrawerToggle;
 import android.widget.Toast;
-import static neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS;
 
 import neuman.orchidclient.authentication.AccountGeneral;
+
+import static neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS;
 
 
 public class MainActivity extends Activity {
@@ -79,7 +74,7 @@ public class MainActivity extends Activity {
         mAccountManager = AccountManager.get(this);
         //mAccount = CreateSyncAccount(this);
 
-        mPlanetTitles = new String[]{"Sync", "Locationpick", "Add Account", "Get Token", "Open Web App", "Test"};
+        mPlanetTitles = new String[]{"Sync", "Locationpick", "Add Account", "Get Token", "Open Web App", "Test", "Settings"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
@@ -305,7 +300,7 @@ public class MainActivity extends Activity {
     private void launchFragment(Fragment fragment){
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
     }
 
     private void selectItem(int position) {
@@ -336,6 +331,10 @@ public class MainActivity extends Activity {
         }
         else if (position==3){
             showAccountPicker(AUTHTOKEN_TYPE_FULL_ACCESS, false);
+        }
+        else if (position==6){
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
         }
 
 
