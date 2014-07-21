@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.Contract;
 import neuman.orchidclient.content.ObjectTypes;
 
@@ -44,6 +45,7 @@ import neuman.orchidclient.content.ObjectTypes;
  */
 public class FormFragment extends Fragment {
     private String TAG = getClass().getSimpleName();
+    private ContentQueryMaker contentQueryMaker;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -189,6 +191,7 @@ public class FormFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+        contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
 
     }
 
@@ -246,10 +249,13 @@ public class FormFragment extends Fragment {
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String hostname = settings.getString("example_text", "NO HOSTNAME");
             outputMap.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_json.getInt("id")).toString()+"/record/create/");
+            outputMap.put("indicator_id",incoming_json.getInt("id"));
+            outputMap.put("title",incoming_json.getString("title")+" "+contentQueryMaker.getCurrentTimeStamp());
         }catch(JSONException e){
             Log.d(TAG, e.toString());
         }
         JSONObject outputJSON = new JSONObject(outputMap);
+
         Log.d("valueJSON", outputJSON.toString());
         insert_into_provider(getActivity().getContentResolver().acquireContentProviderClient(Contract.Entry.CONTENT_URI),outputJSON.toString(), ObjectTypes.TYPE_RECORD,-1);
 

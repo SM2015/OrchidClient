@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
             launchLogin();
         }
 
-        mPlanetTitles = new String[]{"Sync", "Locationpick", "Logout", "Get Token", "Open Web App", "Test", "Settings"};
+        mPlanetTitles = new String[]{"Sync", "Locationpick", "Logout", "Get Token", "Open Web App", "Outbox", "Settings"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
@@ -368,6 +368,9 @@ public class MainActivity extends Activity {
         }
         else if (position==3){
             showAccountPicker(AUTHTOKEN_TYPE_FULL_ACCESS, false);
+        }
+        else if (position==5){
+            launchFragment(new OutboxFragment());
         }
         else if (position==6){
             Intent intent = new Intent(this, SettingsActivity.class);

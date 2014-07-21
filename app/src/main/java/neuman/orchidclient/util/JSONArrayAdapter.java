@@ -9,6 +9,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import neuman.orchidclient.models.Item;
+
 /**
  * Created by neuman on 7/15/14.
  */
@@ -16,13 +18,13 @@ import java.util.ArrayList;
 public class JSONArrayAdapter extends ArrayAdapter<Item> {
 
     // declaring our ArrayList of items
-    private ArrayList<Item> objects;
+    private ArrayList objects;
 
     /* here we must override the constructor for ArrayAdapter
     * the only variable we care about now is ArrayList<Item> objects,
     * because it is the list of objects we want to display.
     */
-    public JSONArrayAdapter(Context context, int textViewResourceId, ArrayList<Item> objects) {
+    public JSONArrayAdapter(Context context, int textViewResourceId, ArrayList objects) {
         super(context, textViewResourceId, objects);
         this.objects = objects;
     }
@@ -50,7 +52,7 @@ public class JSONArrayAdapter extends ArrayAdapter<Item> {
 		 *
 		 * Therefore, i refers to the current Item object.
 		 */
-        Item i = objects.get(position);
+        Item i = (Item) objects.get(position);
 
         if (i != null) {
 

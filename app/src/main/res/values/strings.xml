@@ -24,5 +24,6 @@
     <string name="app_not_available">Sorry, there\'s no web browser available</string>
     <string name="submit_text">Submit</string>
     <string name="hostname">http://192.168.1.119</string>
+    <string name="sync_internal_name">Sync Outbox</string>
 
 </resources>

@@ -11,7 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import org.json.JSONException;
@@ -22,27 +21,29 @@ import java.util.ArrayList;
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
 import neuman.orchidclient.models.Item;
+import neuman.orchidclient.models.Record;
 import neuman.orchidclient.util.JSONArrayAdapter;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link LocationPickFragment.OnFragmentInteractionListener} interface
+ * {@link OutboxFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link LocationPickFragment#newInstance} factory method to
+ * Use the {@link OutboxFragment#newInstance} factory method to
  * create an instance of this fragment.
  *
  */
-public class LocationPickFragment extends Fragment {
+public class OutboxFragment extends Fragment {
     private String TAG = getClass().getSimpleName();
+    private ContentQueryMaker contentQueryMaker;
+
+    private ListView listView;
+    private ArrayList<Record> items = new ArrayList<Record>();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    private ContentQueryMaker contentQueryMaker;
-    private ListView listView;
-    private ArrayList<Item> list_text = new ArrayList<Item>();
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -56,18 +57,18 @@ public class LocationPickFragment extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment LocationPickFragment.
+     * @return A new instance of fragment OutboxFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static LocationPickFragment newInstance(String param1, String param2) {
-        LocationPickFragment fragment = new LocationPickFragment();
+    public static OutboxFragment newInstance(String param1, String param2) {
+        OutboxFragment fragment = new OutboxFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
-    public LocationPickFragment() {
+    public OutboxFragment() {
         // Required empty public constructor
     }
 
@@ -84,7 +85,7 @@ public class LocationPickFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View inflatedView = inflater.inflate(R.layout.fragment_location_pick, container, false);
+        View inflatedView = inflater.inflate(R.layout.fragment_outbox, container, false);
 
         listView = (ListView) inflatedView.findViewById(R.id.listView);
 
@@ -96,11 +97,11 @@ public class LocationPickFragment extends Fragment {
 
 
 
-        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, list_text);
+        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, items);
 
         // Assign adapter to ListView
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new OnItemClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapter, View v, int position,
                                     long arg3) {
@@ -127,13 +128,11 @@ public class LocationPickFragment extends Fragment {
         }
     }
 
-
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_LOCATION);
-
+        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_RECORD);
         // Some providers return null if an error occurs, others throw an exception
         if (null == mCursor) {
     /*
@@ -141,8 +140,8 @@ public class LocationPickFragment extends Fragment {
      * call android.util.Log.e() to log this error.
      *
      */
-        // If the Cursor is empty, the provider found no matches
-            Log.d(TAG,"Cursor Error");
+            // If the Cursor is empty, the provider found no matches
+            Log.d(TAG, "Cursor Error");
         } else if (mCursor.getCount() < 1) {
 
     /*
@@ -162,8 +161,8 @@ public class LocationPickFragment extends Fragment {
                 Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
                 try{
                     JSONObject location_data = new JSONObject(jsonString);
-                    Item newItem = new Item(location_data.get("title").toString(),location_data);
-                    list_text.add(newItem);
+                    Record newItem = new Record(location_data);
+                    items.add(newItem);
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();
@@ -172,8 +171,6 @@ public class LocationPickFragment extends Fragment {
         }
 
     }
-
-
 
     @Override
     public void onDetach() {

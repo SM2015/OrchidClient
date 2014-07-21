@@ -20,7 +20,7 @@ import java.util.ArrayList;
 
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
-import neuman.orchidclient.util.Item;
+import neuman.orchidclient.models.Item;
 import neuman.orchidclient.util.JSONArrayAdapter;
 
 
@@ -40,7 +40,7 @@ public class LocationDetailFragment extends Fragment {
     private static final String ARG_PARAM1 = "location_json_string";
     private ContentQueryMaker contentQueryMaker;
     private ListView listView;
-    private ArrayList<Item> list_text = new ArrayList<Item>();
+    private ArrayList<Item> items = new ArrayList<Item>();
 
     // TODO: Rename and change types of parameters
     private String location_json_string;
@@ -96,7 +96,7 @@ public class LocationDetailFragment extends Fragment {
         // Third parameter - ID of the TextView to which the data is written
         // Forth - the Array of data
 
-        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, list_text);
+        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, items);
 
         // Assign adapter to ListView
         listView.setAdapter(adapter);
@@ -160,7 +160,7 @@ public class LocationDetailFragment extends Fragment {
                 try{
                     JSONObject location_data = new JSONObject(jsonString);
                     Item newItem = new Item(location_data.get("title").toString(),location_data);
-                    list_text.add(newItem);
+                    items.add(newItem);
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();

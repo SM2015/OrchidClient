@@ -1,0 +1,40 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="neuman.orchidclient.OutboxFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_gravity="center_horizontal|top">
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_gravity="center"
+            android:id="@+id/FieldsLinearLayout"
+            android:gravity="top">
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sync_internal_name"
+                android:id="@+id/button"
+                android:layout_gravity="left|top"
+                android:background="#ffffbb32"
+                android:textColor="@android:color/black" />
+        <ListView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/listView"
+            android:layout_gravity="center_horizontal|top" />
+        </LinearLayout>
+
+    </RelativeLayout>
+
+
+
+</FrameLayout>
