@@ -32,6 +32,7 @@ import java.util.Map;
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.Contract;
 import neuman.orchidclient.content.ObjectTypes;
+import neuman.orchidclient.models.Record;
 
 
 /**
@@ -48,15 +49,20 @@ public class FormFragment extends Fragment {
     private ContentQueryMaker contentQueryMaker;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private static final String ARG_LOCATION = "param1";
+    private static final String ARG_INDICATOR = "param2";
+    private static final String ARG_RECORD = "param3";
 
     // TODO: Rename and change types of parameters
-    private String incoming_json_string;
-    private JSONObject incoming_json;
+    private String incoming_indicator_string;
+    private JSONObject incoming_indicator;
+
+    private String record_json_string;
+    private Record incoming_record;
 
     private String location_json_string;
     private JSONObject location_json;
+
 
     private List fieldList = new ArrayList();
 
@@ -67,18 +73,20 @@ public class FormFragment extends Fragment {
      * this fragment using the provided parameters.
      *
      * @param location_json_string Parameter 1.
-     * @param incoming_json_string Parameter 2.
+     * @param incoming_indicator_string Parameter 2.
      * @return A new instance of fragment FormFragment.
      */
-    // TODO: Rename and change types and number of parameters
-    public static FormFragment newInstance(String location_json_string, String incoming_json_string) {
+
+    public static FormFragment newInstance(String location_json_string, String incoming_indicator_string, String incoming_record) {
         FormFragment fragment = new FormFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, location_json_string);
-        args.putString(ARG_PARAM2, incoming_json_string);
+        args.putString(ARG_LOCATION, location_json_string);
+        args.putString(ARG_INDICATOR, incoming_indicator_string);
+        args.putString(ARG_RECORD, incoming_record);
         fragment.setArguments(args);
         return fragment;
     }
+
     public FormFragment() {
         // Required empty public constructor
     }
@@ -87,12 +95,19 @@ public class FormFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            incoming_json_string = getArguments().getString(ARG_PARAM2);
-            location_json_string = getArguments().getString(ARG_PARAM1);
+            incoming_indicator_string = getArguments().getString(ARG_INDICATOR);
+            location_json_string = getArguments().getString(ARG_LOCATION);
+            record_json_string = getArguments().getString(ARG_RECORD);
             try{
-                incoming_json = new JSONObject(incoming_json_string);
+                incoming_indicator = new JSONObject(incoming_indicator_string);
                 location_json = new JSONObject(location_json_string);
-                getActivity().getActionBar().setTitle(incoming_json.get("title").toString());
+                if (record_json_string != "") {
+                    incoming_record = new Record(new JSONObject(record_json_string));
+                }
+                else{
+                    incoming_record = null;
+                }
+                getActivity().getActionBar().setTitle(incoming_indicator.get("title").toString());
             }catch(JSONException e){
                 Log.d(TAG, e.toString());
             }
@@ -110,7 +125,7 @@ public class FormFragment extends Fragment {
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
 
         try{
-            JSONObject form_json = incoming_json.getJSONObject("form");
+            JSONObject form_json = incoming_indicator.getJSONObject("form");
             Log.d(TAG, "form_json: "+form_json.toString());
             JSONObject fieldsList = form_json.getJSONObject("fields");
             Log.d(TAG, "fieldsList json: "+fieldsList.toString());
@@ -131,6 +146,12 @@ public class FormFragment extends Fragment {
                         Switch new_switch = new Switch(getActivity());
                         new_switch.setText(label);
                         new_switch.setTag(key);
+                        if(incoming_record != null){
+                            String value = incoming_record.getFieldStringValue(key);
+                            if (value.equals("on")){
+                                new_switch.setChecked(true);
+                            }
+                        }
                         layout.addView(getLinearLayout(new_switch, ""),layoutParams);
                         fieldList.add(new_switch);
                     }
@@ -138,6 +159,9 @@ public class FormFragment extends Fragment {
                         Log.d(TAG, "IS TEXT");
                         EditText new_edit = new EditText(getActivity());
                         new_edit.setTag(key);
+                        if(incoming_record != null){
+                            new_edit.setText(incoming_record.getFieldStringValue(key));
+                        }
                         layout.addView(getLinearLayout(new_edit, label),layoutParams);
                         fieldList.add(new_edit);
                     }
@@ -148,6 +172,9 @@ public class FormFragment extends Fragment {
                         new_textarea.setMaxLines(5);
                         new_textarea.setLines(5);
                         new_textarea.setSingleLine(false);
+                        if(incoming_record != null){
+                            new_textarea.setText(incoming_record.getFieldStringValue(key));
+                        }
                         layout.addView(getLinearLayout(new_textarea, label),layoutParams);
                         fieldList.add(new_textarea);
                     }
@@ -248,9 +275,10 @@ public class FormFragment extends Fragment {
         try{
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String hostname = settings.getString("example_text", "NO HOSTNAME");
-            outputMap.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_json.getInt("id")).toString()+"/record/create/");
-            outputMap.put("indicator_id",incoming_json.getInt("id"));
-            outputMap.put("title",incoming_json.getString("title")+" "+contentQueryMaker.getCurrentTimeStamp());
+            outputMap.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_indicator.getInt("id")).toString()+"/record/create/");
+            outputMap.put("indicator_id", incoming_indicator.getInt("id"));
+            outputMap.put("location_id", location_json.getInt("id"));
+            outputMap.put("title", incoming_indicator.getString("title")+" "+contentQueryMaker.getCurrentTimeStamp());
         }catch(JSONException e){
             Log.d(TAG, e.toString());
         }

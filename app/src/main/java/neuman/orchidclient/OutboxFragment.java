@@ -20,7 +20,7 @@ import java.util.ArrayList;
 
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
-import neuman.orchidclient.models.Item;
+import neuman.orchidclient.models.Location;
 import neuman.orchidclient.models.Record;
 import neuman.orchidclient.util.JSONArrayAdapter;
 
@@ -107,10 +107,16 @@ public class OutboxFragment extends Fragment {
                                     long arg3) {
 
                 try{
-                    Item item = (Item) adapter.getItemAtPosition(position);
+                    Record item = (Record) adapter.getItemAtPosition(position);
+                    item.setContentQueryMaker(contentQueryMaker);
                     Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
                     FragmentManager fragmentManager = getFragmentManager();
-                    fragmentManager.beginTransaction().replace(R.id.content_frame, LocationDetailFragment.newInstance(item.getJSON().toString())).addToBackStack(null).commit();
+                    Location location = item.getLocation();
+                    Log.d(TAG, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+                    String location_json_string = location.getJSON().toString();
+                    String indicator_json_string = item.getIndicator().getJSON().toString();
+
+                    fragmentManager.beginTransaction().replace(R.id.content_frame, FormFragment.newInstance(location_json_string,indicator_json_string, item.getJSON().toString())).addToBackStack(null).commit();
 
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());

@@ -10,7 +10,8 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import neuman.orchidclient.models.Item;
+import neuman.orchidclient.models.Indicator;
+import neuman.orchidclient.models.Location;
 import neuman.orchidclient.models.Record;
 
 /**
@@ -68,7 +69,8 @@ public class ContentQueryMaker {
                 {
                         Contract.Entry._ID,    // Contract class constant for the _ID column name
                         Contract.Entry.COLUMN_NAME_OBJECTTYPE,
-                        Contract.Entry.COLUMN_NAME_JSON,   // Contract class constant for the word column name
+                        Contract.Entry.COLUMN_NAME_JSON,
+                        Contract.Entry.COLUMN_NAME_MODEL_ID,
                 };
 
         Log.d(TAG, Contract.Entry.CONTENT_URI.toString());
@@ -82,12 +84,12 @@ public class ContentQueryMaker {
         return mCursor;
     }
 
-    public Item get_model(Integer model_type, Integer model_id){
+    public Object get_model(Integer model_type, Integer model_id){
 
         // Defines a string to contain the selection clause
         String mSelectionClause =
                 Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+model_type
-                        +","+Contract.Entry.COLUMN_NAME_MODEL_ID+model_id;
+                        +" AND "+Contract.Entry.COLUMN_NAME_MODEL_ID+" = "+model_id;
 
         Cursor mCursor = make_query(mSelectionClause);
         if (null == mCursor) {
@@ -120,6 +122,14 @@ public class ContentQueryMaker {
                     if( model_type == ObjectTypes.TYPE_RECORD){
                             Record r = new Record(mJSON);
                             return r;
+                    }
+                    else if( model_type == ObjectTypes.TYPE_INDICATOR){
+                        Indicator r = new Indicator(mJSON);
+                        return r;
+                    }
+                    else if( model_type == ObjectTypes.TYPE_LOCATION){
+                        Location r = new Location(mJSON);
+                        return r;
                     }
 
                 }catch(JSONException e){

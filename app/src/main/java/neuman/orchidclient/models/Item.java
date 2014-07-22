@@ -2,6 +2,7 @@ package neuman.orchidclient.models;
 
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -45,6 +46,18 @@ public class Item {
         return null;
     }
 
+    public JSONArray getJSONArray(String key) {
+
+        try{
+            return this.getJSON().getJSONArray(key);
+
+        }catch(JSONException e){
+            Log.d(this.TAG, e.toString());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public String getTitle() {
         this.setTitle((String) get("title"));
         if(this.title == null)
@@ -59,7 +72,8 @@ public class Item {
     }
 
     public JSONObject getJSON() {
-        return this.json;
+        Log.d(TAG, "item JSON: "+json);
+        return json;
     }
 
     public void setJSON(JSONObject json) {
