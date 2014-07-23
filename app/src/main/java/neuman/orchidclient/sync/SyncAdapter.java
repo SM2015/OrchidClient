@@ -311,10 +311,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         request.addHeader("Cookie", cookiestring);
                         List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
                         JSONArray values_json_array = record_data.getJSONArray("values");
-                        for(int i=0; i < values_json_array.length(); i++){
-                            JSONObject val = (JSONObject) values_json_array.get(i);
-                            nameValuePairs.add(new BasicNameValuePair(val.getString("name"), val.getString("value")));
-                        }
+                        nameValuePairs.add(new BasicNameValuePair("json",jsonString ));
+
                         request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
                         HttpResponse response = httpclient.execute(request);
                         StatusLine statusLine = response.getStatusLine();

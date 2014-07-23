@@ -135,7 +135,7 @@ public class FormFragment extends Fragment {
                 JSONObject field = fieldsList.getJSONObject(i);
                     Log.d(TAG, "field: "+field.toString());
                     String label = field.getString("label");
-                    String field_id = field.getString("label");
+                    String field_id = field.getString("id");
                     String field_type = field.getString("field_type");
                     Log.d(TAG, "input_type: "+field_type);
                     if (field_type.equals("CHECKBOX")){
@@ -248,7 +248,7 @@ public class FormFragment extends Fragment {
             if (f instanceof Switch) {
                 Switch old_switch = (Switch) f;
                 Map valueMap = new HashMap();
-                valueMap.put("name", (String) old_switch.getTag());
+                valueMap.put("field_id", (String) old_switch.getTag());
                 if(old_switch.isChecked()){
                     valueMap.put("value", true);
                 }
@@ -261,7 +261,7 @@ public class FormFragment extends Fragment {
             else if (f instanceof EditText) {
                 EditText old_edit = (EditText) f;
                 Map valueMap = new HashMap();
-                valueMap.put("name", (String) old_edit.getTag());
+                valueMap.put("field_id", (String) old_edit.getTag());
                 valueMap.put("value", old_edit.getText().toString());
                 switch_values.add(valueMap);
             }

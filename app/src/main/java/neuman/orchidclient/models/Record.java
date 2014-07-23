@@ -34,12 +34,12 @@ public class Record extends Item {
         return getJSONArray("values");
     }
 
-    public Object getFieldValue(String title){
+    public Object getFieldValue(String field_id){
         JSONArray values = getValues();
         try{
             for (int i = 0 ; i < values.length(); i++) {
                 JSONObject obj = values.getJSONObject(i);
-                if (obj.getString("name").equals(title)){
+                if (obj.getString("field_id").equals(field_id)){
                     return obj.get("value");
                 }
             }
@@ -47,7 +47,7 @@ public class Record extends Item {
             Log.d(this.TAG, e.toString());
             e.printStackTrace();
         }
-        Log.d(TAG, "Couldn't getFieldValue("+title+")");
+        Log.d(TAG, "Couldn't getFieldValue("+field_id+")");
         return null;
 
     }
