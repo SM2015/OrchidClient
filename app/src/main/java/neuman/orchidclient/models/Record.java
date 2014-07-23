@@ -34,20 +34,20 @@ public class Record extends Item {
         return getJSONArray("values");
     }
 
-    public String getFieldStringValue(String title){
+    public Object getFieldValue(String title){
         JSONArray values = getValues();
         try{
             for (int i = 0 ; i < values.length(); i++) {
                 JSONObject obj = values.getJSONObject(i);
                 if (obj.getString("name").equals(title)){
-                    return obj.getString("value");
+                    return obj.get("value");
                 }
             }
         }catch(JSONException e){
             Log.d(this.TAG, e.toString());
             e.printStackTrace();
         }
-        Log.d(TAG, "Couldn't getFieldStringValue("+title+")");
+        Log.d(TAG, "Couldn't getFieldValue("+title+")");
         return null;
 
     }

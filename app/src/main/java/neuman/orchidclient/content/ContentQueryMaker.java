@@ -24,6 +24,7 @@ public class ContentQueryMaker {
 
     public ContentQueryMaker(ContentResolver contentResolver){
         this.contentResolver = contentResolver;
+
     }
 
     public Cursor get_all_of_object_type(Integer object_type){

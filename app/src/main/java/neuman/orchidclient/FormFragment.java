@@ -20,12 +20,12 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -109,7 +109,7 @@ public class FormFragment extends Fragment {
                 }
                 getActivity().getActionBar().setTitle(incoming_indicator.get("title").toString());
             }catch(JSONException e){
-                Log.d(TAG, e.toString());
+                e.printStackTrace();
             }
         }
     }
@@ -124,65 +124,62 @@ public class FormFragment extends Fragment {
         LinearLayout layout = (LinearLayout) inflatedView.findViewById(R.id.FieldsLinearLayout);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
 
+        JSONObject locationObject = new JSONObject();
+        JSONArray locationList = new JSONArray();
+
         try{
-            JSONObject form_json = incoming_indicator.getJSONObject("form");
-            Log.d(TAG, "form_json: "+form_json.toString());
-            JSONObject fieldsList = form_json.getJSONObject("fields");
+            JSONArray fieldsList = incoming_indicator.getJSONArray("fields");
             Log.d(TAG, "fieldsList json: "+fieldsList.toString());
 
-
-            Iterator<?> keys = fieldsList.keys();
-
-            while( keys.hasNext() ){
-                String key = (String)keys.next();
-                if( fieldsList.get(key) instanceof JSONObject ){
-                    JSONObject field = (JSONObject) fieldsList.get(key);
-                    Log.d(TAG, "field: "+fieldsList.get(key).toString());
+            for(int i=0; i < fieldsList.length(); i++){
+                JSONObject field = fieldsList.getJSONObject(i);
+                    Log.d(TAG, "field: "+field.toString());
                     String label = field.getString("label");
-                    String input_type = field.getJSONObject("widget").getString("input_type");
-                    Log.d(TAG, "input_type: "+input_type);
-                    if (input_type.equals("checkbox")){
+                    String field_id = field.getString("label");
+                    String field_type = field.getString("field_type");
+                    Log.d(TAG, "input_type: "+field_type);
+                    if (field_type.equals("CHECKBOX")){
                         Log.d(TAG, "IS CHECKBOX");
                         Switch new_switch = new Switch(getActivity());
                         new_switch.setText(label);
-                        new_switch.setTag(key);
+                        new_switch.setTag(field_id);
                         if(incoming_record != null){
-                            String value = incoming_record.getFieldStringValue(key);
-                            if (value.equals("on")){
+                            Boolean value = (Boolean) incoming_record.getFieldValue(field_id);
+                            if (value.equals(true)){
                                 new_switch.setChecked(true);
                             }
                         }
                         layout.addView(getLinearLayout(new_switch, ""),layoutParams);
                         fieldList.add(new_switch);
                     }
-                    else if (input_type.equals("text")){
+                    else if (field_type.equals("TEXT")){
                         Log.d(TAG, "IS TEXT");
                         EditText new_edit = new EditText(getActivity());
-                        new_edit.setTag(key);
+                        new_edit.setTag(field_id);
                         if(incoming_record != null){
-                            new_edit.setText(incoming_record.getFieldStringValue(key));
+                            new_edit.setText((String) incoming_record.getFieldValue(field_id));
                         }
                         layout.addView(getLinearLayout(new_edit, label),layoutParams);
                         fieldList.add(new_edit);
                     }
-                    else if (input_type.equals("textarea")){
+                    else if (field_type.equals("TEXTAREA")){
                         Log.d(TAG, "IS TEXTAREA");
                         EditText new_textarea = new EditText(getActivity());
-                        new_textarea.setTag(key);
+                        new_textarea.setTag(field_id);
                         new_textarea.setMaxLines(5);
                         new_textarea.setLines(5);
                         new_textarea.setSingleLine(false);
                         if(incoming_record != null){
-                            new_textarea.setText(incoming_record.getFieldStringValue(key));
+                            new_textarea.setText((String)  incoming_record.getFieldValue(field_id));
                         }
                         layout.addView(getLinearLayout(new_textarea, label),layoutParams);
                         fieldList.add(new_textarea);
                     }
-                }
             }
 
+
         }catch(JSONException e){
-            Log.d(TAG, e.toString());
+            e.printStackTrace();
         }
 
         Button submit_button = new Button(getActivity());
@@ -253,10 +250,10 @@ public class FormFragment extends Fragment {
                 Map valueMap = new HashMap();
                 valueMap.put("name", (String) old_switch.getTag());
                 if(old_switch.isChecked()){
-                    valueMap.put("value", "on");
+                    valueMap.put("value", true);
                 }
                 else{
-                    valueMap.put("value", "off");
+                    valueMap.put("value", false);
                 }
 
                 switch_values.add(valueMap);
@@ -275,44 +272,69 @@ public class FormFragment extends Fragment {
         try{
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String hostname = settings.getString("example_text", "NO HOSTNAME");
-            outputMap.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_indicator.getInt("id")).toString()+"/record/create/");
+            outputMap.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_indicator.getInt("id")).toString()+"/record/upload/");
             outputMap.put("indicator_id", incoming_indicator.getInt("id"));
             outputMap.put("location_id", location_json.getInt("id"));
             outputMap.put("title", incoming_indicator.getString("title")+" "+contentQueryMaker.getCurrentTimeStamp());
-        }catch(JSONException e){
-            Log.d(TAG, e.toString());
+            //add the row_id so we can update instead of insert if there was a pre-existing record (aka we are editing)
+            if(incoming_record != null){
+                outputMap.put("row_id", (Integer) incoming_record.get("row_id"));
+            }
+            }catch(JSONException e){
+            e.printStackTrace();
         }
         JSONObject outputJSON = new JSONObject(outputMap);
 
         Log.d("valueJSON", outputJSON.toString());
-        insert_into_provider(getActivity().getContentResolver().acquireContentProviderClient(Contract.Entry.CONTENT_URI),outputJSON.toString(), ObjectTypes.TYPE_RECORD,-1);
+        save_to_provider(getActivity().getContentResolver().acquireContentProviderClient(Contract.Entry.CONTENT_URI), outputJSON.toString(), ObjectTypes.TYPE_RECORD, -1);
 
     }
 
-    public void insert_into_provider(ContentProviderClient provider, String json, Integer objecttype, Integer model_id){
+    public void save_to_provider(ContentProviderClient provider, String json_string, Integer object_type, Integer model_id){
         try {
+
+            Integer row_id = null;
+            String mSelectionClause = null;
             // Defines a new Uri object that receives the result of the insertion
             Uri mNewUri;
 
             // Defines an object to contain the new values to insert
             ContentValues mNewValues = new ContentValues();
 
+
+            try {
+                JSONObject json = new JSONObject(json_string);
+                Log.d(TAG, "save_to_provider: "+json_string);
+                row_id = json.getInt("row_id");
+                mSelectionClause =
+                        Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+object_type
+                                +" AND "+"_ID"+" = "+row_id;
+                Log.d(TAG, "Trying to save to :"+mSelectionClause);
+            }catch(JSONException e){
+                e.printStackTrace();
+            }
+
+
+
         /*
          * Sets the values of each column and inserts the word. The arguments to the "put"
          * method are "column name" and "value"
          */
-            mNewValues.put(Contract.Entry.COLUMN_NAME_OBJECTTYPE, objecttype);
-            mNewValues.put(Contract.Entry.COLUMN_NAME_JSON, json);
+            mNewValues.put(Contract.Entry.COLUMN_NAME_OBJECTTYPE, object_type);
+            mNewValues.put(Contract.Entry.COLUMN_NAME_JSON, json_string);
             mNewValues.put(Contract.Entry.COLUMN_NAME_MODEL_ID, model_id);
 
 
-            mNewUri = provider.insert(
-                    Contract.Entry.CONTENT_URI,   // the user dictionary content URI
-                    mNewValues                          // the values to insert
-            );
+            if(row_id != null){
+                provider.update( Contract.Entry.CONTENT_URI, mNewValues, mSelectionClause, null );
+            }
+            else{
+                provider.insert(Contract.Entry.CONTENT_URI, mNewValues);
+            }
 
         } catch (RemoteException e) {
             Log.e(TAG, "Error updating database: " + e.toString());
+            e.printStackTrace();
             return;
         }
     }

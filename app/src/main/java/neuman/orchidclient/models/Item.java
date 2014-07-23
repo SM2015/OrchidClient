@@ -72,7 +72,7 @@ public class Item {
     }
 
     public JSONObject getJSON() {
-        Log.d(TAG, "item JSON: "+json);
+        //Log.d(TAG, "item JSON: "+json);
         return json;
     }
 

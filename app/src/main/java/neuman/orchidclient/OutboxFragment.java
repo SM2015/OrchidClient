@@ -110,6 +110,7 @@ public class OutboxFragment extends Fragment {
                     Record item = (Record) adapter.getItemAtPosition(position);
                     item.setContentQueryMaker(contentQueryMaker);
                     Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
+                    Log.d(TAG, "Clicked JSON" + item.getJSON().toString());
                     FragmentManager fragmentManager = getFragmentManager();
                     Location location = item.getLocation();
                     Log.d(TAG, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
@@ -166,8 +167,9 @@ public class OutboxFragment extends Fragment {
                 String jsonString = mCursor.getString(2);
                 Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
                 try{
-                    JSONObject location_data = new JSONObject(jsonString);
-                    Record newItem = new Record(location_data);
+                    JSONObject record_json = new JSONObject(jsonString);
+                    record_json.put("row_id", mCursor.getInt(0));
+                    Record newItem = new Record(record_json);
                     items.add(newItem);
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
