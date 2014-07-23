@@ -25,5 +25,7 @@
     <string name="submit_text">Submit</string>
     <string name="hostname">http://192.168.1.119</string>
     <string name="sync_internal_name">Sync Outbox</string>
+    <string name="choose_different_indicator">Choose Different Indicator</string>
+    <string name="repeat_indicator">Repeat Indicator</string>
 
 </resources>

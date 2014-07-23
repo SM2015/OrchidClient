@@ -3,6 +3,7 @@ package neuman.orchidclient;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.content.SharedPreferences;
@@ -47,25 +48,19 @@ import neuman.orchidclient.models.Record;
 public class FormFragment extends Fragment {
     private String TAG = getClass().getSimpleName();
     private ContentQueryMaker contentQueryMaker;
-    // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_LOCATION = "param1";
     private static final String ARG_INDICATOR = "param2";
     private static final String ARG_RECORD = "param3";
 
-    // TODO: Rename and change types of parameters
     private String incoming_indicator_string;
     private JSONObject incoming_indicator;
-
     private String record_json_string;
     private Record incoming_record;
-
-    private String location_json_string;
+    private String incoming_location_json_string;
     private JSONObject location_json;
-
-
     private List fieldList = new ArrayList();
-
+    private Integer visible_checkboxes = 0;
     private OnFragmentInteractionListener mListener;
 
     /**
@@ -96,11 +91,11 @@ public class FormFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             incoming_indicator_string = getArguments().getString(ARG_INDICATOR);
-            location_json_string = getArguments().getString(ARG_LOCATION);
+            incoming_location_json_string = getArguments().getString(ARG_LOCATION);
             record_json_string = getArguments().getString(ARG_RECORD);
             try{
                 incoming_indicator = new JSONObject(incoming_indicator_string);
-                location_json = new JSONObject(location_json_string);
+                location_json = new JSONObject(incoming_location_json_string);
                 if (record_json_string != "") {
                     incoming_record = new Record(new JSONObject(record_json_string));
                 }
@@ -131,50 +126,51 @@ public class FormFragment extends Fragment {
             JSONArray fieldsList = incoming_indicator.getJSONArray("fields");
             Log.d(TAG, "fieldsList json: "+fieldsList.toString());
 
-            for(int i=0; i < fieldsList.length(); i++){
+            for(int i=0; i < fieldsList.length(); i++) {
                 JSONObject field = fieldsList.getJSONObject(i);
-                    Log.d(TAG, "field: "+field.toString());
+                Log.d(TAG, "field: " + field.toString());
+                if (field.getBoolean("visible")) {
                     String label = field.getString("label");
                     String field_id = field.getString("id");
                     String field_type = field.getString("field_type");
-                    Log.d(TAG, "input_type: "+field_type);
-                    if (field_type.equals("CHECKBOX")){
+                    Log.d(TAG, "input_type: " + field_type);
+                    if (field_type.equals("CHECKBOX")) {
                         Log.d(TAG, "IS CHECKBOX");
+                        visible_checkboxes +=1;
                         Switch new_switch = new Switch(getActivity());
                         new_switch.setText(label);
                         new_switch.setTag(field_id);
-                        if(incoming_record != null){
+                        if (incoming_record != null) {
                             Boolean value = (Boolean) incoming_record.getFieldValue(field_id);
-                            if (value.equals(true)){
+                            if (value.equals(true)) {
                                 new_switch.setChecked(true);
                             }
                         }
-                        layout.addView(getLinearLayout(new_switch, ""),layoutParams);
+                        layout.addView(getLinearLayout(new_switch, ""), layoutParams);
                         fieldList.add(new_switch);
-                    }
-                    else if (field_type.equals("TEXT")){
+                    } else if (field_type.equals("TEXT")) {
                         Log.d(TAG, "IS TEXT");
                         EditText new_edit = new EditText(getActivity());
                         new_edit.setTag(field_id);
-                        if(incoming_record != null){
+                        if (incoming_record != null) {
                             new_edit.setText((String) incoming_record.getFieldValue(field_id));
                         }
-                        layout.addView(getLinearLayout(new_edit, label),layoutParams);
+                        layout.addView(getLinearLayout(new_edit, label), layoutParams);
                         fieldList.add(new_edit);
-                    }
-                    else if (field_type.equals("TEXTAREA")){
+                    } else if (field_type.equals("TEXTAREA")) {
                         Log.d(TAG, "IS TEXTAREA");
                         EditText new_textarea = new EditText(getActivity());
                         new_textarea.setTag(field_id);
                         new_textarea.setMaxLines(5);
                         new_textarea.setLines(5);
                         new_textarea.setSingleLine(false);
-                        if(incoming_record != null){
-                            new_textarea.setText((String)  incoming_record.getFieldValue(field_id));
+                        if (incoming_record != null) {
+                            new_textarea.setText((String) incoming_record.getFieldValue(field_id));
                         }
-                        layout.addView(getLinearLayout(new_textarea, label),layoutParams);
+                        layout.addView(getLinearLayout(new_textarea, label), layoutParams);
                         fieldList.add(new_textarea);
                     }
+                }
             }
 
 
@@ -242,6 +238,7 @@ public class FormFragment extends Fragment {
 
     private void submitForm(){
         List switch_values = new ArrayList();
+        Integer visible_checkboxes_checked = 0;
 
         for (Object f : fieldList)
         {
@@ -251,6 +248,7 @@ public class FormFragment extends Fragment {
                 valueMap.put("field_id", (String) old_switch.getTag());
                 if(old_switch.isChecked()){
                     valueMap.put("value", true);
+                    visible_checkboxes_checked +=1;
                 }
                 else{
                     valueMap.put("value", false);
@@ -267,6 +265,7 @@ public class FormFragment extends Fragment {
             }
 
         }
+        float score = (visible_checkboxes_checked * 100.0f) / visible_checkboxes;
         Map outputMap = new HashMap();
         outputMap.put("values", switch_values);
         try{
@@ -275,6 +274,7 @@ public class FormFragment extends Fragment {
             outputMap.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_indicator.getInt("id")).toString()+"/record/upload/");
             outputMap.put("indicator_id", incoming_indicator.getInt("id"));
             outputMap.put("location_id", location_json.getInt("id"));
+            outputMap.put("score", score);
             outputMap.put("title", incoming_indicator.getString("title")+" "+contentQueryMaker.getCurrentTimeStamp());
             //add the row_id so we can update instead of insert if there was a pre-existing record (aka we are editing)
             if(incoming_record != null){
@@ -287,6 +287,8 @@ public class FormFragment extends Fragment {
 
         Log.d("valueJSON", outputJSON.toString());
         save_to_provider(getActivity().getContentResolver().acquireContentProviderClient(Contract.Entry.CONTENT_URI), outputJSON.toString(), ObjectTypes.TYPE_RECORD, -1);
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, MessageFragment.newInstance(incoming_location_json_string,incoming_indicator_string,Float.toString(score), "OUTBOX")).addToBackStack(null).commit();
 
     }
 
@@ -338,7 +340,5 @@ public class FormFragment extends Fragment {
             return;
         }
     }
-
-
 
 }
