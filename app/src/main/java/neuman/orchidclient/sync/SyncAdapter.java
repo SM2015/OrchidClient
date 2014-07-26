@@ -7,6 +7,7 @@ import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SyncResult;
 import android.database.Cursor;
@@ -150,6 +151,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             Log.d(TAG, "Attempting to insert: "+individual_location_json);
             JSONObject location_json = new JSONObject(individual_location_json);
             insert_into_provider(provider,syncResult,individual_location_json, ObjectTypes.TYPE_LOCATION,location_json.getInt("id"));
+            contentQueryMaker.insert_message("Successfully Synchronized Location "+location_json.getString("title"));
         }
         }catch(JSONException e){
             Log.d(TAG, e.toString());
@@ -167,17 +169,20 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 Log.d(TAG, "Attempting to insert: "+individual_indicator_json);
                 JSONObject indicator_json = new JSONObject(individual_indicator_json);
                 insert_into_provider(provider,syncResult,individual_indicator_json, ObjectTypes.TYPE_INDICATOR,indicator_json.getInt("id"));
+                contentQueryMaker.insert_message("Successfully Synchronized Indicator "+indicator_json.getString("title"));
             }
         }catch(JSONException e){
             Log.d(TAG, e.toString());
             e.printStackTrace();
+            contentQueryMaker.insert_message(e.toString());
         }
 
         push_new_records(getContext().getContentResolver(),account);
-        contentQueryMaker.drop_contentProvider_model(ObjectTypes.TYPE_RECORD);
+
         Log.i(TAG, "Network synchronization complete");
 
-
+        Intent i = new Intent(SyncService.SYNC_FINISHED);
+        getContext().sendBroadcast(i);
 
     }
 
@@ -234,12 +239,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             } else{
                 //Closes the connection.
                 response.getEntity().getContent().close();
+                contentQueryMaker.insert_message(statusLine.getReasonPhrase());
                 throw new IOException(statusLine.getReasonPhrase());
             }
 
         }catch(Exception e){
             Log.d("HTTP exception", e.toString());
             e.printStackTrace();
+            contentQueryMaker.insert_message(e.toString());
         }
         return responseString;
     }
@@ -322,21 +329,33 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                             out.close();
                             responseString = out.toString();
                             Log.d(TAG, responseString);
-                            //..more logic
+                            JSONObject response_JSON = new JSONObject(responseString);
+                            if (response_JSON.getString("status").equals("success")){
+                                contentQueryMaker.drop_row(mCursor.getInt(0));
+                                contentQueryMaker.insert_message("New Record With ID"+response_JSON.getString("record_id")+"Successfully Synchronized");
+                            }else{
+                                contentQueryMaker.insert_message("Problem Synchronizing Record");
+                            }
+
                         } else{
                             //Closes the connection.
                             response.getEntity().getContent().close();
+                            contentQueryMaker.insert_message(statusLine.getReasonPhrase());
                             throw new IOException(statusLine.getReasonPhrase());
                         }
 
                     }catch(Exception e){
                         Log.d("HTTP exception", e.toString());
                         e.printStackTrace();
+                        contentQueryMaker.insert_message(e.toString());
+
                     }
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();
+                    contentQueryMaker.insert_message(e.toString());
                 }
+
             }
         }
 

@@ -24,6 +24,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import neuman.orchidclient.content.ContentQueryMaker;
+
 /**
  * Handles the comminication with Parse.com
  *
@@ -35,11 +37,12 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
 
     private String TAG = "Parse";
     private Context context;
-    private SharedPreferences prefs;
+    private ContentQueryMaker contentQueryMaker;
 
     public ParseComServerAuthenticate(Context context_in){
 
         context = context_in;
+        contentQueryMaker = new ContentQueryMaker(context.getContentResolver());
     }
 
     @Override
@@ -97,6 +100,7 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
                 responseString = out.toString();
                 Log.d(TAG, responseString);
                 response.getEntity().getContent().close();
+                contentQueryMaker.insert_message(statusLine.getReasonPhrase());
                 throw new IOException(statusLine.getReasonPhrase());
             }
 
@@ -105,6 +109,7 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
 
         }catch(Exception e){
             Log.d("HTTP exception", e.toString());
+            contentQueryMaker.insert_message(e.toString());
         }
         httpClient = null;
 
@@ -123,80 +128,5 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
         int code;
         String error;
     }
-    private class User implements Serializable {
 
-        private String firstName;
-        private String lastName;
-        private String username;
-        private String phone;
-        private String objectId;
-        public String sessionToken;
-        private String gravatarId;
-        private String avatarUrl;
-
-
-        public String getFirstName() {
-            return firstName;
-        }
-
-        public void setFirstName(String firstName) {
-            this.firstName = firstName;
-        }
-
-        public String getLastName() {
-            return lastName;
-        }
-
-        public void setLastName(String lastName) {
-            this.lastName = lastName;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getPhone() {
-            return phone;
-        }
-
-        public void setPhone(String phone) {
-            this.phone = phone;
-        }
-
-        public String getObjectId() {
-            return objectId;
-        }
-
-        public void setObjectId(String objectId) {
-            this.objectId = objectId;
-        }
-
-        public String getSessionToken() {
-            return sessionToken;
-        }
-
-        public void setSessionToken(String sessionToken) {
-            this.sessionToken = sessionToken;
-        }
-
-        public String getGravatarId() {
-            return gravatarId;
-        }
-
-        public void setGravatarId(String gravatarId) {
-            this.gravatarId = gravatarId;
-        }
-
-        public String getAvatarUrl() {
-            return avatarUrl;
-        }
-
-        public void setAvatarUrl(String avatarUrl) {
-            this.avatarUrl = avatarUrl;
-        }
-    }
 }

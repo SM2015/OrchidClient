@@ -23,12 +23,12 @@ import static neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_R
  * Date: 19/03/13
  * Time: 18:58
  */
-public class UdinicAuthenticator extends AbstractAccountAuthenticator {
+public class OrchidAuthenticator extends AbstractAccountAuthenticator {
 
     private String TAG = "UdinicAuthenticator";
     private final Context mContext;
 
-    public UdinicAuthenticator(Context context) {
+    public OrchidAuthenticator(Context context) {
         super(context);
 
         // I hate you! Google - set mContext as protected!

@@ -1,6 +1,7 @@
 package neuman.orchidclient.content;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.util.Log;
 
@@ -64,6 +65,13 @@ public class ContentQueryMaker {
         drop_contentProvider_model(ObjectTypes.TYPE_LOCATION);
     }
 
+    public void drop_row(Integer row){
+        Log.d(TAG, "Dropping row: "+row);
+        // Defines a string to contain the selection clause
+        String mSelectionClause =  Contract.Entry._ID+" ="+row+"";
+        contentResolver.delete(Contract.Entry.CONTENT_URI, mSelectionClause, null);
+    }
+
     public Cursor make_query(String selectionClause){
         // A "projection" defines the columns that will be returned for each row
         String[] mProjection =
@@ -83,6 +91,29 @@ public class ContentQueryMaker {
                 null,                    // Either empty, or the string the user entered
                 Contract.Entry.COLUMN_NAME_OBJECTTYPE);                       // The sort order for the returned rows
         return mCursor;
+    }
+
+    public void insert_message(String message){
+        // Defines an object to contain the new values to insert
+        ContentValues mNewValues = new ContentValues();
+        JSONObject json = new JSONObject();
+        try {
+
+            json.put("title", message);
+        }catch(JSONException e){
+            Log.d(TAG, e.toString());
+            e.printStackTrace();
+        }
+
+        /*
+         * Sets the values of each column and inserts the word. The arguments to the "put"
+         * method are "column name" and "value"
+         */
+        mNewValues.put(Contract.Entry.COLUMN_NAME_OBJECTTYPE, ObjectTypes.TYPE_USERMESSAGE);
+        mNewValues.put(Contract.Entry.COLUMN_NAME_JSON, json.toString());
+        mNewValues.put(Contract.Entry.COLUMN_NAME_MODEL_ID, -1);
+
+        contentResolver.insert(Contract.Entry.CONTENT_URI, mNewValues);
     }
 
     public Object get_model(Integer model_type, Integer model_id){
@@ -141,6 +172,27 @@ public class ContentQueryMaker {
         }
 
         return null;
+    }
+
+    public Integer get_model_count(Integer model_type){
+        // Defines a string to contain the selection clause
+        String mSelectionClause = Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+model_type;
+
+        Cursor mCursor = make_query(mSelectionClause);
+        if (null == mCursor) {
+    /*
+     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
+     * call android.util.Log.e() to log this error.
+     *
+     */
+            // If the Cursor is empty, the provider found no matches
+            Log.d(TAG,"Cursor Error");
+        }else{
+            return mCursor.getCount();
+        }
+
+        return null;
+
     }
 
     public static String getCurrentTimeStamp() {

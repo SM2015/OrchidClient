@@ -2,7 +2,6 @@ package neuman.orchidclient;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 
 import org.json.JSONException;
@@ -21,31 +19,18 @@ import java.util.ArrayList;
 
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
-import neuman.orchidclient.models.Location;
-import neuman.orchidclient.models.Record;
+import neuman.orchidclient.models.Item;
 import neuman.orchidclient.util.JSONArrayAdapter;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OutboxFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link OutboxFragment#newInstance} factory method to
- * create an instance of this fragment.
- *
- */
-public class OutboxFragment extends Fragment {
+public class UserMessageDisplayFragment extends Fragment {
     private String TAG = getClass().getSimpleName();
-    private ContentQueryMaker contentQueryMaker;
-    private Button button_sync;
-
-    private ListView listView;
-    private ArrayList<Record> items = new ArrayList<Record>();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    private ContentQueryMaker contentQueryMaker;
+    private ListView listView;
+    private ArrayList<Item> list_text = new ArrayList<Item>();
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -59,18 +44,18 @@ public class OutboxFragment extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment OutboxFragment.
+     * @return A new instance of fragment LocationPickFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static OutboxFragment newInstance(String param1, String param2) {
-        OutboxFragment fragment = new OutboxFragment();
+    public static LocationPickFragment newInstance(String param1, String param2) {
+        LocationPickFragment fragment = new LocationPickFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
-    public OutboxFragment() {
+    public UserMessageDisplayFragment() {
         // Required empty public constructor
     }
 
@@ -87,17 +72,7 @@ public class OutboxFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View inflatedView = inflater.inflate(R.layout.fragment_outbox, container, false);
-
-        button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
-        button_sync.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((MainActivity)getActivity()).attemptSync();
-                FragmentManager fragmentManager = getFragmentManager();
-                fragmentManager.popBackStack();
-            }
-        });
+        View inflatedView = inflater.inflate(R.layout.fragment_location_pick, container, false);
 
         listView = (ListView) inflatedView.findViewById(R.id.listView);
 
@@ -109,7 +84,7 @@ public class OutboxFragment extends Fragment {
 
 
 
-        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, items);
+        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, list_text);
 
         // Assign adapter to ListView
         listView.setAdapter(adapter);
@@ -117,23 +92,7 @@ public class OutboxFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> adapter, View v, int position,
                                     long arg3) {
-
-                try{
-                    Record item = (Record) adapter.getItemAtPosition(position);
-                    item.setContentQueryMaker(contentQueryMaker);
-                    Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
-                    Log.d(TAG, "Clicked JSON" + item.getJSON().toString());
-                    FragmentManager fragmentManager = getFragmentManager();
-                    Location location = item.getLocation();
-                    Log.d(TAG, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-                    String location_json_string = location.getJSON().toString();
-                    String indicator_json_string = item.getIndicator().getJSON().toString();
-
-                    fragmentManager.beginTransaction().replace(R.id.content_frame, FormFragment.newInstance(location_json_string,indicator_json_string, item.getJSON().toString())).addToBackStack(null).commit();
-
-                }catch(JSONException e){
-                    Log.d(TAG, e.toString());
-                }
+                //do nothing for now
             }
         });
 
@@ -147,11 +106,13 @@ public class OutboxFragment extends Fragment {
         }
     }
 
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_RECORD);
+        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_USERMESSAGE);
+
         // Some providers return null if an error occurs, others throw an exception
         if (null == mCursor) {
     /*
@@ -160,7 +121,7 @@ public class OutboxFragment extends Fragment {
      *
      */
             // If the Cursor is empty, the provider found no matches
-            Log.d(TAG, "Cursor Error");
+            Log.d(TAG,"Cursor Error");
         } else if (mCursor.getCount() < 1) {
 
     /*
@@ -179,17 +140,19 @@ public class OutboxFragment extends Fragment {
                 String jsonString = mCursor.getString(2);
                 Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
                 try{
-                    JSONObject record_json = new JSONObject(jsonString);
-                    record_json.put("row_id", mCursor.getInt(0));
-                    Record newItem = new Record(record_json);
-                    items.add(newItem);
+                    JSONObject location_data = new JSONObject(jsonString);
+                    Item newItem = new Item(location_data.get("title").toString(),location_data);
+                    list_text.add(newItem);
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();
                 }
             }
         }
+
     }
+
+
 
     @Override
     public void onDetach() {
@@ -212,5 +175,5 @@ public class OutboxFragment extends Fragment {
         public void onFragmentInteraction(Uri uri);
     }
 
-
 }
+

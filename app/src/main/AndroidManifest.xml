@@ -31,7 +31,7 @@
             android:name=".authentication.SignUpActivity"
             android:label="Signupski" />
 
-        <service android:name=".authentication.UdinicAuthenticatorService" >
+        <service android:name=".authentication.OrchidAuthenticatorService" >
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
@@ -76,5 +76,6 @@ com.example.android.datasync.provider
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.READ_SYNC_STATS" />
 
 </manifest>

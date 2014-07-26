@@ -8,12 +8,17 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.text.TextUtils;
@@ -31,6 +36,10 @@ import android.widget.Toast;
 
 import neuman.orchidclient.authentication.AccountGeneral;
 import neuman.orchidclient.content.ContentQueryMaker;
+import neuman.orchidclient.content.Contract;
+import neuman.orchidclient.content.ObjectTypes;
+import neuman.orchidclient.sync.OrchidContentObserver;
+import neuman.orchidclient.sync.SyncService;
 
 import static neuman.orchidclient.authentication.AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS;
 
@@ -62,6 +71,7 @@ public class MainActivity extends Activity {
     private ContentQueryMaker contentQueryMaker;
     private AlertDialog mAlertDialog;
     private boolean mInvalidate;
+    SharedPreferences settings;
 
 
     @Override
@@ -73,6 +83,11 @@ public class MainActivity extends Activity {
                     .add(R.id.content_frame, new PlaceholderFragment())
                     .commit();
         }
+
+        //grab the shared prefs
+        settings = PreferenceManager.getDefaultSharedPreferences(this);
+
+        //account stuff
         mAccountManager = AccountManager.get(this);
         contentQueryMaker = new ContentQueryMaker(this.getContentResolver());
         final Account availableAccounts[] = mAccountManager.getAccountsByType(AccountGeneral.ACCOUNT_TYPE);
@@ -80,6 +95,10 @@ public class MainActivity extends Activity {
         if (availableAccounts.length == 0) {
             launchLogin();
         }
+        OrchidContentObserver contentObserver = new OrchidContentObserver(new Handler());
+        contentObserver.Contexto = this;
+        getContentResolver().registerContentObserver(Contract.Entry.CONTENT_URI, false, contentObserver);
+
 
         mPlanetTitles = new String[]{"Sync", "Locationpick", "Logout", "Get Token", "Open Web App", "Outbox", "Settings"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -131,6 +150,7 @@ public class MainActivity extends Activity {
         }
 
     }
+
     private void addNewAccount(String accountType, String authTokenType) {
 
 
@@ -152,6 +172,7 @@ public class MainActivity extends Activity {
             }
         }, null);
     }
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -161,17 +182,19 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void logOutAccount(){
+    private void logOutAccount() {
 
         final Account availableAccounts[] = mAccountManager.getAccountsByType(AccountGeneral.ACCOUNT_TYPE);
-        for( Account account: availableAccounts){
-            mAccountManager.removeAccount(account,null,null);
+        for (Account account : availableAccounts) {
+            mAccountManager.removeAccount(account, null, null);
         }
+        contentQueryMaker.drop_all_tables();
     }
 
 
     /**
      * Show all the accounts registered on the account manager. Request an auth token upon user select.
+     *
      * @param authTokenType
      */
     private void showAccountPicker(final String authTokenType, final boolean invalidate) {
@@ -190,7 +213,7 @@ public class MainActivity extends Activity {
             mAlertDialog = new AlertDialog.Builder(this).setTitle("Pick Account").setAdapter(new ArrayAdapter<String>(getBaseContext(), android.R.layout.simple_list_item_1, name), new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    if(invalidate)
+                    if (invalidate)
                         invalidateAuthToken(availableAccounts[which], authTokenType);
                     else
                         getExistingAccountAuthToken(availableAccounts[which], authTokenType);
@@ -213,7 +236,7 @@ public class MainActivity extends Activity {
             }
 
             //there should only ever be 1 account
-            if(invalidate)
+            if (invalidate)
                 invalidateAuthToken(availableAccounts[0], authTokenType);
             else
                 getExistingAccountAuthToken(availableAccounts[0], authTokenType);
@@ -222,6 +245,7 @@ public class MainActivity extends Activity {
 
     /**
      * Get the auth token for an existing account on the AccountManager
+     *
      * @param account
      * @param authTokenType
      */
@@ -251,11 +275,12 @@ public class MainActivity extends Activity {
 
     /**
      * Invalidates the auth token for the account
+     *
      * @param account
      * @param authTokenType
      */
     private void invalidateAuthToken(final Account account, String authTokenType) {
-        final AccountManagerFuture<Bundle> future = mAccountManager.getAuthToken(account, authTokenType, null, this, null,null);
+        final AccountManagerFuture<Bundle> future = mAccountManager.getAuthToken(account, authTokenType, null, this, null, null);
 
         new Thread(new Runnable() {
             @Override
@@ -300,7 +325,6 @@ public class MainActivity extends Activity {
     }
 
 
-
     /* The click listner for ListView in the navigation drawer */
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
@@ -309,20 +333,23 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void launchFragment(Fragment fragment){
+    private void launchFragment(Fragment fragment) {
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
     }
 
-    private void attemptSync(){
+    public void attemptSync() {
         Log.d("drawer", "should sync");
-        // Pass the settings flags by inserting them in a bundle
-        Bundle settingsBundle = new Bundle();
-        settingsBundle.putBoolean(
-                ContentResolver.SYNC_EXTRAS_MANUAL, true);
-        settingsBundle.putBoolean(
-                ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        //wipe out all old error messages
+        contentQueryMaker.drop_contentProvider_model(ObjectTypes.TYPE_USERMESSAGE);
+            // Pass the settings flags by inserting them in a bundle
+            Bundle settingsBundle = new Bundle();
+            settingsBundle.putBoolean(
+                    ContentResolver.SYNC_EXTRAS_MANUAL, true);
+            settingsBundle.putBoolean(
+                    ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
                     /*
                      * Request the sync for the default account, authority, and
                      * manual sync settings
@@ -330,23 +357,21 @@ public class MainActivity extends Activity {
         ContentResolver.requestSync(mAccount, AUTHORITY, settingsBundle);
     }
 
-    private void launchLogin(){
+    private void launchLogin() {
         addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
     }
 
     private void selectItem(int position) {
-        Log.d("drawer",new Integer(position).toString());
-        if (position==0){
+        Log.d("drawer", new Integer(position).toString());
+        if (position == 0) {
             attemptSync();
-        }
-        else if (position==1){
+        } else if (position == 1) {
             launchFragment(new LocationPickFragment());
-        }
-        else if (position==2){
+        } else if (position == 2) {
             DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    switch (which){
+                    switch (which) {
                         case DialogInterface.BUTTON_POSITIVE:
                             //Yes button clicked
                             logOutAccount();
@@ -365,14 +390,11 @@ public class MainActivity extends Activity {
             builder.setMessage("Are you sure you want to log out?  Doing so will delete any records that have not been synchronized.  You will not be able to use this app until you log back in while connected to a network.").setPositiveButton("Yes", dialogClickListener)
                     .setNegativeButton("No", dialogClickListener).show();
 
-        }
-        else if (position==3){
+        } else if (position == 3) {
             showAccountPicker(AUTHTOKEN_TYPE_FULL_ACCESS, false);
-        }
-        else if (position==5){
+        } else if (position == 5) {
             launchFragment(new OutboxFragment());
-        }
-        else if (position==6){
+        } else if (position == 6) {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
         }
@@ -446,7 +468,7 @@ public class MainActivity extends Activity {
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
+                                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
             //find the english button and add alistener for it
@@ -464,12 +486,7 @@ public class MainActivity extends Activity {
         }
 
 
-
-
-
-
-
-        private void launchLogin(){
+        private void launchLogin() {
             //Intent myIntent = new Intent(getActivity(), LoginActvity.class);
             //startActivityForResult(myIntent, LOGIN_RESULT_CODE);
 
@@ -489,7 +506,6 @@ public class MainActivity extends Activity {
         }
 
     }
-
 
 
     /**
@@ -517,7 +533,7 @@ public class MainActivity extends Activity {
              * here.
              */
         } else {
-            Log.d("PASS","PASS");
+            Log.d("PASS", "PASS");
             /*
              * The account exists or some other error occurred. Log this, report it,
              * or handle it internally.
@@ -528,5 +544,27 @@ public class MainActivity extends Activity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(syncFinishedReceiver, new IntentFilter(SyncService.SYNC_FINISHED));
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(syncFinishedReceiver);
+    }
+
+    private BroadcastReceiver syncFinishedReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "Sync finished, should refresh nao!!");
+            if(contentQueryMaker.get_model_count(ObjectTypes.TYPE_USERMESSAGE)>0){
+                launchFragment(new UserMessageDisplayFragment());
+            }
+        }
+    };
 }
+

@@ -14,6 +14,7 @@ import android.app.Service;
  * onPerformSync().
  */
 public class SyncService extends Service {
+    public static String SYNC_FINISHED = "SYNC_FINISHED";
     // Storage for an instance of the sync adapter
     private static SyncAdapter sSyncAdapter = null;
     // Object to use as a thread-safe lock

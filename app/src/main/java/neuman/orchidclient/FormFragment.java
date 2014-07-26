@@ -127,6 +127,7 @@ public class FormFragment extends Fragment {
             Log.d(TAG, "fieldsList json: "+fieldsList.toString());
 
             for(int i=0; i < fieldsList.length(); i++) {
+                int colorPos = i % ObjectTypes.colors.length;
                 JSONObject field = fieldsList.getJSONObject(i);
                 Log.d(TAG, "field: " + field.toString());
                 if (field.getBoolean("visible")) {
@@ -146,7 +147,7 @@ public class FormFragment extends Fragment {
                                 new_switch.setChecked(true);
                             }
                         }
-                        layout.addView(getLinearLayout(new_switch, ""), layoutParams);
+                        layout.addView(getLinearLayout(new_switch, "",ObjectTypes.colors[colorPos]), layoutParams);
                         fieldList.add(new_switch);
                     } else if (field_type.equals("TEXT")) {
                         Log.d(TAG, "IS TEXT");
@@ -155,7 +156,7 @@ public class FormFragment extends Fragment {
                         if (incoming_record != null) {
                             new_edit.setText((String) incoming_record.getFieldValue(field_id));
                         }
-                        layout.addView(getLinearLayout(new_edit, label), layoutParams);
+                        layout.addView(getLinearLayout(new_edit, label,ObjectTypes.colors[colorPos]), layoutParams);
                         fieldList.add(new_edit);
                     } else if (field_type.equals("TEXTAREA")) {
                         Log.d(TAG, "IS TEXTAREA");
@@ -167,7 +168,7 @@ public class FormFragment extends Fragment {
                         if (incoming_record != null) {
                             new_textarea.setText((String) incoming_record.getFieldValue(field_id));
                         }
-                        layout.addView(getLinearLayout(new_textarea, label), layoutParams);
+                        layout.addView(getLinearLayout(new_textarea, label,ObjectTypes.colors[colorPos]), layoutParams);
                         fieldList.add(new_textarea);
                     }
                 }
@@ -190,7 +191,7 @@ public class FormFragment extends Fragment {
         return inflatedView;
     }
 
-    private LinearLayout getLinearLayout(View field, String name){
+    private LinearLayout getLinearLayout(View field, String name, Integer color){
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
         LinearLayout outputLayout = new LinearLayout(getActivity());
         outputLayout.setOrientation(LinearLayout.VERTICAL);
@@ -198,6 +199,7 @@ public class FormFragment extends Fragment {
         label.setText(name);
         outputLayout.addView(label, layoutParams);
         outputLayout.addView(field);
+        outputLayout.setBackgroundColor(color);
         return outputLayout;
     }
 

@@ -22,7 +22,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/sync_internal_name"
-                android:id="@+id/button"
+                android:id="@+id/button_sync"
                 android:layout_gravity="left|top"
                 android:background="#ffffbb32"
                 android:textColor="@android:color/black" />

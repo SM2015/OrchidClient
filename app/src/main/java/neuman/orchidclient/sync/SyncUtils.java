@@ -8,8 +8,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 
 
-
-import neuman.orchidclient.authentication.UdinicAuthenticatorService;
+import neuman.orchidclient.authentication.OrchidAuthenticatorService;
 import neuman.orchidclient.content.Contract;
 
 /**
@@ -50,7 +49,7 @@ public class SyncUtils {
                 .getDefaultSharedPreferences(context).getBoolean(PREF_SETUP_COMPLETE, false);
 
         // Create account, if it's missing. (Either first run, or user has deleted account.)
-        Account account = UdinicAuthenticatorService.GetAccount();
+        Account account = OrchidAuthenticatorService.GetAccount();
         AccountManager accountManager = (AccountManager) context.getSystemService(Context.ACCOUNT_SERVICE);
         if (accountManager.addAccountExplicitly(account, null, null)) {
             // Inform the system that this account supports sync
@@ -91,7 +90,7 @@ public class SyncUtils {
         b.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         b.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         ContentResolver.requestSync(
-                UdinicAuthenticatorService.GetAccount(),      // Sync account
+                OrchidAuthenticatorService.GetAccount(),      // Sync account
                 Contract.CONTENT_AUTHORITY, // Content authority
                 b);                                      // Extras
     }

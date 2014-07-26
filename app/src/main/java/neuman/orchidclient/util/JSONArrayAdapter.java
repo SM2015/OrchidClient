@@ -4,11 +4,13 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import neuman.orchidclient.content.ObjectTypes;
 import neuman.orchidclient.models.Item;
 
 /**
@@ -19,6 +21,7 @@ public class JSONArrayAdapter extends ArrayAdapter<Item> {
 
     // declaring our ArrayList of items
     private ArrayList objects;
+
 
     /* here we must override the constructor for ArrayAdapter
     * the only variable we care about now is ArrayList<Item> objects,
@@ -65,6 +68,9 @@ public class JSONArrayAdapter extends ArrayAdapter<Item> {
             // if not, assign some text!
             if (tt != null){
                 tt.setText(i.getTitle());
+                int colorPos = position % ObjectTypes.colors.length;
+                tt.setBackgroundColor(ObjectTypes.colors[colorPos]);
+                tt.setLayoutParams(new AbsListView.LayoutParams(AbsListView.LayoutParams.WRAP_CONTENT, AbsListView.LayoutParams.WRAP_CONTENT));
             }
         }
 
