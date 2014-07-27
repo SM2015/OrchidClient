@@ -10,5 +10,5 @@ public class ObjectTypes {
     public static final Integer TYPE_INDICATOR = 2;
     public static final Integer TYPE_RECORD = 3;
 
-    public static int[] colors = new int[] { 0x30FF0000, 0x300000FF };
+    public static int[] colors = new int[] { 0x30FFFFFF, 0x30C0C0C0 };
 }

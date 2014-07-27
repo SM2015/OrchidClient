@@ -70,7 +70,7 @@ public class JSONArrayAdapter extends ArrayAdapter<Item> {
                 tt.setText(i.getTitle());
                 int colorPos = position % ObjectTypes.colors.length;
                 tt.setBackgroundColor(ObjectTypes.colors[colorPos]);
-                tt.setLayoutParams(new AbsListView.LayoutParams(AbsListView.LayoutParams.WRAP_CONTENT, AbsListView.LayoutParams.WRAP_CONTENT));
+                tt.setLayoutParams(new AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT, AbsListView.LayoutParams.WRAP_CONTENT));
             }
         }
 

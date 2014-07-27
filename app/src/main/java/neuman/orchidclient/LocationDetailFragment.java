@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -85,6 +86,65 @@ public class LocationDetailFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
+        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_INDICATOR);
+        // Some providers return null if an error occurs, others throw an exception
+        if (null == mCursor) {
+    /*
+     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
+     * call android.util.Log.e() to log this error.
+     *
+     */
+            // If the Cursor is empty, the provider found no matches
+            Log.d(TAG,"Cursor Error");
+        } else if (mCursor.getCount() < 1) {
+
+    /*
+     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
+     * an error. You may want to offer the user the option to insert a new row, or re-type the
+     * search term.
+     */
+            Log.d(TAG,"No results");
+
+        } else {
+            JSONArray indicator_ids_json;
+            ArrayList <Integer> indicator_ids = new ArrayList<Integer>();
+            try{
+                indicator_ids_json = location_json.getJSONArray("indicator_ids");
+                // ignore the case of a non-array value.
+                if (indicator_ids_json != null) {
+
+                    // Extract numbers from JSON array.
+                    for (int i = 0; i < indicator_ids_json.length(); ++i) {
+                        indicator_ids.add(indicator_ids_json.optInt(i));
+                    }
+                }
+
+            }catch(JSONException e){
+                Log.d(TAG, e.toString());
+                e.printStackTrace();
+            }
+            // Insert code here to do something with the results
+            while (mCursor.moveToNext()) {
+                Log.d(TAG,"*****CURSOR MOVED*****");
+                Log.d(TAG, mCursor.getColumnName(0)+": "+mCursor.getString(0));
+                Log.d(TAG, mCursor.getColumnName(1)+": "+mCursor.getString(1));
+                String jsonString = mCursor.getString(2);
+                Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
+                try{
+                    JSONObject indicator_json = new JSONObject(jsonString);
+                    //only add the indicator to the list if it exists within the location indicator_ids list
+                    if(indicator_ids.contains(indicator_json.getInt("id"))) {
+                        Item newItem = new Item(indicator_json.get("title").toString(), indicator_json);
+                        items.add(newItem);
+                    }
+                }catch(JSONException e){
+                    Log.d(TAG, e.toString());
+                    e.printStackTrace();
+                }
+            }
+        }
+
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_location_detail, container, false);
 
@@ -129,44 +189,7 @@ public class LocationDetailFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_INDICATOR);
-        // Some providers return null if an error occurs, others throw an exception
-        if (null == mCursor) {
-    /*
-     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
-     * call android.util.Log.e() to log this error.
-     *
-     */
-            // If the Cursor is empty, the provider found no matches
-            Log.d(TAG,"Cursor Error");
-        } else if (mCursor.getCount() < 1) {
 
-    /*
-     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
-     * an error. You may want to offer the user the option to insert a new row, or re-type the
-     * search term.
-     */
-            Log.d(TAG,"No results");
-
-        } else {
-            // Insert code here to do something with the results
-            while (mCursor.moveToNext()) {
-                Log.d(TAG,"*****CURSOR MOVED*****");
-                Log.d(TAG, mCursor.getColumnName(0)+": "+mCursor.getString(0));
-                Log.d(TAG, mCursor.getColumnName(1)+": "+mCursor.getString(1));
-                String jsonString = mCursor.getString(2);
-                Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
-                try{
-                    JSONObject location_data = new JSONObject(jsonString);
-                    Item newItem = new Item(location_data.get("title").toString(),location_data);
-                    items.add(newItem);
-                }catch(JSONException e){
-                    Log.d(TAG, e.toString());
-                    e.printStackTrace();
-                }
-            }
-        }
 
     }
 
