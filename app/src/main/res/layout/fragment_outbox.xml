@@ -25,7 +25,11 @@
                 android:id="@+id/button_sync"
                 android:layout_gravity="left|top"
                 android:background="#ffffbb32"
-                android:textColor="@android:color/black" />
+                android:textColor="@android:color/black"
+                android:layout_marginTop="@dimen/abc_action_bar_icon_vertical_padding"
+                android:paddingTop="@dimen/stripe_button_padding"
+                android:paddingBottom="@dimen/stripe_button_padding"
+                android:textSize="@dimen/abc_action_bar_title_text_size" />
         <ListView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"

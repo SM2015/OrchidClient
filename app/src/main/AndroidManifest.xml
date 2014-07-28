@@ -26,7 +26,7 @@
         <!-- Authenticator related activities and service needs to be declared here in order for the app to recognize them -->
         <activity
             android:name=".authentication.AuthenticatorActivity"
-            android:label="Loginzki" />
+            android:label="Login" />
         <activity
             android:name=".authentication.SignUpActivity"
             android:label="Signupski" />
@@ -77,5 +77,6 @@ com.example.android.datasync.provider
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_SYNC_STATS" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>
 
 </manifest>

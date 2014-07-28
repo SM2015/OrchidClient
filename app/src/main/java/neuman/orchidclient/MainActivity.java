@@ -16,6 +16,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -87,6 +88,9 @@ public class MainActivity extends Activity {
         //grab the shared prefs
         settings = PreferenceManager.getDefaultSharedPreferences(this);
 
+        //turn off autosync
+        this.getContentResolver().setMasterSyncAutomatically(false);
+
         //account stuff
         mAccountManager = AccountManager.get(this);
         contentQueryMaker = new ContentQueryMaker(this.getContentResolver());
@@ -100,7 +104,7 @@ public class MainActivity extends Activity {
         getContentResolver().registerContentObserver(Contract.Entry.CONTENT_URI, false, contentObserver);
 
 
-        mPlanetTitles = new String[]{"Sync", "Locationpick", "Logout", "Get Token", "Open Web App", "Outbox", "Settings"};
+        mPlanetTitles = new String[]{"Change User", "Set Location", "Outbox", "Open Web App", "Settings"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
@@ -341,7 +345,7 @@ public class MainActivity extends Activity {
     }
 
     public void attemptSync() {
-        Log.d("drawer", "should sync");
+        Log.d(TAG, "should sync");
         //wipe out all old error messages
         contentQueryMaker.drop_contentProvider_model(ObjectTypes.TYPE_USERMESSAGE);
             // Pass the settings flags by inserting them in a bundle
@@ -362,12 +366,10 @@ public class MainActivity extends Activity {
     }
 
     private void selectItem(int position) {
+        //"Change User", "Set Location", "Outbox", "Open Web App", "Settings"
         Log.d("drawer", new Integer(position).toString());
         if (position == 0) {
-            attemptSync();
-        } else if (position == 1) {
-            launchFragment(new LocationPickFragment());
-        } else if (position == 2) {
+            //change user
             DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -390,30 +392,24 @@ public class MainActivity extends Activity {
             builder.setMessage("Are you sure you want to log out?  Doing so will delete any records that have not been synchronized.  You will not be able to use this app until you log back in while connected to a network.").setPositiveButton("Yes", dialogClickListener)
                     .setNegativeButton("No", dialogClickListener).show();
 
-        } else if (position == 3) {
-            showAccountPicker(AUTHTOKEN_TYPE_FULL_ACCESS, false);
-        } else if (position == 5) {
+        } else if (position == 1) {
+            //set location
+            launchFragment(new LocationPickFragment());
+        }  else if (position == 2) {
             launchFragment(new OutboxFragment());
-        } else if (position == 6) {
+        }else if (position == 3) {
+            //open in web app
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+            String hostname = settings.getString("example_text", "NO HOSTNAME");
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(hostname));
+            startActivity(browserIntent);
+
+        } else if (position == 4) {
+            //open settings
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
         }
 
-
-        // update the main content by replacing fragments
-        /*
-        Fragment fragment = new PlanetFragment();
-        Bundle args = new Bundle();
-        args.putInt(PlanetFragment.ARG_PLANET_NUMBER, position);
-        fragment.setArguments(args);
-
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
-
-        // update selected item and title, then close the drawer
-        mDrawerList.setItemChecked(position, true);
-        setTitle(mPlanetTitles[position]);
-        */
         mDrawerLayout.closeDrawer(mDrawerList);
     }
 

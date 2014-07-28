@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.ListView;
 
 import org.json.JSONException;
@@ -42,7 +43,8 @@ public class LocationPickFragment extends Fragment {
     private static final String ARG_PARAM2 = "param2";
     private ContentQueryMaker contentQueryMaker;
     private ListView listView;
-    private ArrayList<Item> list_text = new ArrayList<Item>();
+    private ArrayList<Item> itemArrayList = new ArrayList<Item>();
+    private Button button_gps;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -86,6 +88,15 @@ public class LocationPickFragment extends Fragment {
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_location_pick, container, false);
 
+        button_gps = (Button) inflatedView.findViewById(R.id.button_gps);
+        button_gps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FragmentManager fragmentManager = getFragmentManager();
+                fragmentManager.beginTransaction().replace(R.id.content_frame, new GetLocationFragment()).addToBackStack(null).commit();
+            }
+        });
+
         listView = (ListView) inflatedView.findViewById(R.id.listView);
 
         // Define a new Adapter
@@ -96,7 +107,7 @@ public class LocationPickFragment extends Fragment {
 
 
 
-        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, list_text);
+        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, itemArrayList);
 
         // Assign adapter to ListView
         listView.setAdapter(adapter);
@@ -163,7 +174,7 @@ public class LocationPickFragment extends Fragment {
                 try{
                     JSONObject location_data = new JSONObject(jsonString);
                     Item newItem = new Item(location_data.get("title").toString(),location_data);
-                    list_text.add(newItem);
+                    itemArrayList.add(newItem);
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();

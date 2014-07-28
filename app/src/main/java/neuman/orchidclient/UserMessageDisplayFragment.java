@@ -72,7 +72,7 @@ public class UserMessageDisplayFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View inflatedView = inflater.inflate(R.layout.fragment_location_pick, container, false);
+        View inflatedView = inflater.inflate(R.layout.generic_list, container, false);
 
         listView = (ListView) inflatedView.findViewById(R.id.listView);
 

@@ -27,5 +27,8 @@
     <string name="sync_internal_name">Sync Outbox</string>
     <string name="choose_different_indicator">Choose Different Indicator</string>
     <string name="repeat_indicator">Repeat Indicator</string>
+    <string name="yes_internal_name">Yes</string>
+    <string name="no_internal_name">No</string>
+    <string name="gps_internal_name">USE CURRENT LOCATION</string>
 
 </resources>
