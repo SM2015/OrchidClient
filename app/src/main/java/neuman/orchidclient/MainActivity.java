@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getFragmentManager().beginTransaction()
-                    .add(R.id.content_frame, new PlaceholderFragment())
+                    .add(R.id.content_frame, new LocationPickFragment())
                     .commit();
         }
 
@@ -466,18 +466,8 @@ public class MainActivity extends Activity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
-            //find the english button and add alistener for it
-            button_english = (Button) rootView.findViewById(R.id.button_english);
-            button_english.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    //addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
-
-
-                }
-            });
-
+            //FragmentManager fragmentManager = getFragmentManager();
+            //fragmentManager.beginTransaction().replace(R.id.content_frame, new LocationPickFragment()).addToBackStack(null).commit();
             return rootView;
         }
 
@@ -562,5 +552,9 @@ public class MainActivity extends Activity {
             }
         }
     };
+
+    public void set_action_bar_title(String title){
+        getActionBar().setTitle(title);
+    }
 }
 

@@ -59,7 +59,7 @@ public class FormFragment extends Fragment {
     private Record incoming_record;
     private String incoming_location_json_string;
     private JSONObject location_json;
-    private List fieldList = new ArrayList();
+    private List fieldList;
     private Integer visible_checkboxes = 0;
     private OnFragmentInteractionListener mListener;
 
@@ -114,6 +114,7 @@ public class FormFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_form, container, false);
+        fieldList = new ArrayList();
 
 
         LinearLayout layout = (LinearLayout) inflatedView.findViewById(R.id.FieldsLinearLayout);
@@ -121,6 +122,7 @@ public class FormFragment extends Fragment {
 
         JSONObject locationObject = new JSONObject();
         JSONArray locationList = new JSONArray();
+        visible_checkboxes = 0;
 
         try{
             JSONArray fieldsList = incoming_indicator.getJSONArray("fields");

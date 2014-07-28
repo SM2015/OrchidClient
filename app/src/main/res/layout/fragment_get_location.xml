@@ -16,8 +16,8 @@ tools:context="neuman.orchidclient.GetLocationFragment">
     <ProgressBar
         android:id="@+id/location_progress"
         style="?android:attr/progressBarStyleLarge"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:visibility="visible"
         android:layout_centerInParent="true" />
@@ -39,7 +39,8 @@ tools:context="neuman.orchidclient.GetLocationFragment">
             android:layout_below="@+id/button_layout"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="@dimen/stripe_button_padding"
-            android:layout_marginTop="@dimen/stripe_button_padding" />
+            android:layout_marginTop="@dimen/stripe_button_padding"
+            android:layout_gravity="center_horizontal" />
         <Button
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -50,7 +51,10 @@ tools:context="neuman.orchidclient.GetLocationFragment">
             android:textColor="@android:color/black"
             android:clickable="false"
             android:layout_marginBottom="@dimen/stripe_button_padding"
-            android:layout_marginTop="@dimen/stripe_button_padding" />
+            android:layout_marginTop="@dimen/stripe_button_padding"
+            android:paddingBottom="@dimen/stripe_button_padding"
+            android:paddingTop="@dimen/stripe_button_padding"
+            android:textSize="@dimen/abc_action_bar_title_text_size" />
         <Button
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -60,7 +64,10 @@ tools:context="neuman.orchidclient.GetLocationFragment">
             android:background="#ff774a"
             android:textColor="@android:color/black"
             android:layout_marginBottom="@dimen/stripe_button_padding"
-            android:layout_marginTop="@dimen/stripe_button_padding" />
+            android:layout_marginTop="@dimen/stripe_button_padding"
+            android:paddingBottom="@dimen/stripe_button_padding"
+            android:paddingTop="@dimen/stripe_button_padding"
+            android:textSize="@dimen/abc_action_bar_title_text_size" />
     </LinearLayout>
 
 

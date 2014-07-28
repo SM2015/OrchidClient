@@ -86,8 +86,10 @@ public class OutboxFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        ((MainActivity)getActivity()).set_action_bar_title("Outbox");
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_outbox, container, false);
+
 
         button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
         button_sync.setOnClickListener(new View.OnClickListener() {

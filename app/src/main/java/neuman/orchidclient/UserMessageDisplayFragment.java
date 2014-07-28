@@ -75,6 +75,7 @@ public class UserMessageDisplayFragment extends Fragment {
         View inflatedView = inflater.inflate(R.layout.generic_list, container, false);
 
         listView = (ListView) inflatedView.findViewById(R.id.listView);
+        ((MainActivity)getActivity()).set_action_bar_title("Sync Results");
 
         // Define a new Adapter
         // First parameter - Context

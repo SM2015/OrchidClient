@@ -95,6 +95,7 @@ public class GetLocationFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        ((MainActivity)getActivity()).set_action_bar_title("Getting GPS Location");
         contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_get_location, container, false);
@@ -126,16 +127,18 @@ public class GetLocationFragment extends Fragment {
         final LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
 
         // Define a listener that responds to location updates
-        LocationListener locationListener = new LocationListener() {
+        final LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
                 //showProgress(false);
                 Log.d(TAG, "LOCATION FOUND: "+location.toString());
                 current_gps_location = location;
                 closest_orchid_location = get_nearest_location(location);
-                mQuestionView.setText("Are you at "+closest_orchid_location.getTitle());
+                mQuestionView.setText("Are you at "+closest_orchid_location.getTitle()+"?");
                 mProgressView.setVisibility(View.INVISIBLE);
                 mButtonView.setVisibility(View.VISIBLE);
+
+                locationManager.removeUpdates(this);
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {

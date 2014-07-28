@@ -121,6 +121,7 @@ public class MessageFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
 
+
     }
 
     @Override

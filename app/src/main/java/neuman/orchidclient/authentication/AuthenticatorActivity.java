@@ -4,8 +4,11 @@ import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -62,14 +65,14 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
                 submit();
             }
         });
-        findViewById(R.id.signUp).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.textview_forgot_password).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Since there can only be one AuthenticatorActivity, we call the sign up activity, get his results,
-                // and return them in setAccountAuthenticatorResult(). See finishLogin().
-                Intent signup = new Intent(getBaseContext(), SignUpActivity.class);
-                signup.putExtras(getIntent().getExtras());
-                startActivityForResult(signup, REQ_SIGNUP);
+                //open forgot password link in webapp
+                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                String hostname = settings.getString("example_text", "NO HOSTNAME");
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(hostname));
+                startActivity(browserIntent);
             }
         });
     }
