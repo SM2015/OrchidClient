@@ -44,12 +44,10 @@ public class OutboxFragment extends Fragment {
     private ArrayList<Record> items = new ArrayList<Record>();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private static final String ARG_DEST = "param1";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private Boolean drafts;
 
     private OnFragmentInteractionListener mListener;
 
@@ -58,15 +56,13 @@ public class OutboxFragment extends Fragment {
      * this fragment using the provided parameters.
      *
      * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
      * @return A new instance of fragment OutboxFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static OutboxFragment newInstance(String param1, String param2) {
+    public static OutboxFragment newInstance(String param1) {
         OutboxFragment fragment = new OutboxFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+        args.putString(ARG_DEST, param1);
         fragment.setArguments(args);
         return fragment;
     }
@@ -78,28 +74,75 @@ public class OutboxFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            if(getArguments().getString(ARG_DEST).equals("DRAFTS")){
+                drafts = true;
+            }
+            else{
+                drafts = false;
+
+            }
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        ((MainActivity)getActivity()).set_action_bar_title("Outbox");
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_outbox, container, false);
 
+        contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
+        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_RECORD);
+        // Some providers return null if an error occurs, others throw an exception
+        if (null == mCursor) {
+    /*
+     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
+     * call android.util.Log.e() to log this error.
+     *
+     */
+            // If the Cursor is empty, the provider found no matches
+            Log.d(TAG, "Cursor Error");
+        } else if (mCursor.getCount() < 1) {
 
-        button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
-        button_sync.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((MainActivity)getActivity()).attemptSync();
-                FragmentManager fragmentManager = getFragmentManager();
-                fragmentManager.popBackStack();
+    /*
+     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
+     * an error. You may want to offer the user the option to insert a new row, or re-type the
+     * search term.
+     */
+            Log.d(TAG,"No results");
+
+        } else {
+            // Insert code here to do something with the results
+            while (mCursor.moveToNext()) {
+                String jsonString = mCursor.getString(2);
+                try{
+                    JSONObject record_json = new JSONObject(jsonString);
+                    if(record_json.getBoolean("draft")==drafts){
+                        record_json.put("row_id", mCursor.getInt(0));
+                        Record newItem = new Record(record_json);
+                        items.add(newItem);}
+                }catch(JSONException e){
+                    Log.d(TAG, e.toString());
+                    e.printStackTrace();
+                }
             }
-        });
+        }
+        button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
+        if(drafts){
+            ((MainActivity)getActivity()).set_action_bar_title("Drafts");
+            button_sync.setVisibility(View.GONE);
+        }else {
+            ((MainActivity)getActivity()).set_action_bar_title("Outbox");
+            button_sync.setVisibility(View.VISIBLE);
+            button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
+            button_sync.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    ((MainActivity) getActivity()).attemptSync();
+                    FragmentManager fragmentManager = getFragmentManager();
+                    fragmentManager.popBackStack();
+                }
+            });
+        }
 
         listView = (ListView) inflatedView.findViewById(R.id.listView);
 
@@ -127,7 +170,6 @@ public class OutboxFragment extends Fragment {
                     Log.d(TAG, "Clicked JSON" + item.getJSON().toString());
                     FragmentManager fragmentManager = getFragmentManager();
                     Location location = item.getLocation();
-                    Log.d(TAG, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                     String location_json_string = location.getJSON().toString();
                     String indicator_json_string = item.getIndicator().getJSON().toString();
 
@@ -152,45 +194,7 @@ public class OutboxFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_RECORD);
-        // Some providers return null if an error occurs, others throw an exception
-        if (null == mCursor) {
-    /*
-     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
-     * call android.util.Log.e() to log this error.
-     *
-     */
-            // If the Cursor is empty, the provider found no matches
-            Log.d(TAG, "Cursor Error");
-        } else if (mCursor.getCount() < 1) {
 
-    /*
-     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
-     * an error. You may want to offer the user the option to insert a new row, or re-type the
-     * search term.
-     */
-            Log.d(TAG,"No results");
-
-        } else {
-            // Insert code here to do something with the results
-            while (mCursor.moveToNext()) {
-                Log.d(TAG,"*****CURSOR MOVED*****");
-                Log.d(TAG, mCursor.getColumnName(0)+": "+mCursor.getString(0));
-                Log.d(TAG, mCursor.getColumnName(1)+": "+mCursor.getString(1));
-                String jsonString = mCursor.getString(2);
-                Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
-                try{
-                    JSONObject record_json = new JSONObject(jsonString);
-                    record_json.put("row_id", mCursor.getInt(0));
-                    Record newItem = new Record(record_json);
-                    items.add(newItem);
-                }catch(JSONException e){
-                    Log.d(TAG, e.toString());
-                    e.printStackTrace();
-                }
-            }
-        }
     }
 
     @Override

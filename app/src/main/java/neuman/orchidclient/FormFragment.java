@@ -63,6 +63,9 @@ public class FormFragment extends Fragment {
     private Integer visible_checkboxes = 0;
     private OnFragmentInteractionListener mListener;
 
+    private Button button_outbox;
+    private Button button_draft;
+
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -114,6 +117,23 @@ public class FormFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_form, container, false);
+
+        button_outbox = (Button) inflatedView.findViewById(R.id.button_outbox);
+        button_outbox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                submitForm(false);
+            }
+        });
+
+        button_draft = (Button) inflatedView.findViewById(R.id.button_draft);
+        button_draft.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                submitForm(true);
+            }
+        });
+
         fieldList = new ArrayList();
 
 
@@ -127,12 +147,14 @@ public class FormFragment extends Fragment {
         try{
             JSONArray fieldsList = incoming_indicator.getJSONArray("fields");
             Log.d(TAG, "fieldsList json: "+fieldsList.toString());
+            Integer visible_fields = 0;
 
             for(int i=0; i < fieldsList.length(); i++) {
                 int colorPos = i % ObjectTypes.colors.length;
                 JSONObject field = fieldsList.getJSONObject(i);
                 Log.d(TAG, "field: " + field.toString());
                 if (field.getBoolean("visible")) {
+                    visible_fields +=1;
                     String label = field.getString("label");
                     String field_id = field.getString("id");
                     String field_type = field.getString("field_type");
@@ -141,7 +163,7 @@ public class FormFragment extends Fragment {
                         Log.d(TAG, "IS CHECKBOX");
                         visible_checkboxes +=1;
                         Switch new_switch = new Switch(getActivity());
-                        new_switch.setText(label);
+                        new_switch.setText(visible_fields+". "+label);
                         new_switch.setTag(field_id);
                         if (incoming_record != null) {
                             Boolean value = (Boolean) incoming_record.getFieldValue(field_id);
@@ -158,7 +180,7 @@ public class FormFragment extends Fragment {
                         if (incoming_record != null) {
                             new_edit.setText((String) incoming_record.getFieldValue(field_id));
                         }
-                        layout.addView(getLinearLayout(new_edit, label,ObjectTypes.colors[colorPos]), layoutParams);
+                        layout.addView(getLinearLayout(new_edit, visible_fields+". "+label,ObjectTypes.colors[colorPos]), layoutParams);
                         fieldList.add(new_edit);
                     } else if (field_type.equals("TEXTAREA")) {
                         Log.d(TAG, "IS TEXTAREA");
@@ -170,7 +192,7 @@ public class FormFragment extends Fragment {
                         if (incoming_record != null) {
                             new_textarea.setText((String) incoming_record.getFieldValue(field_id));
                         }
-                        layout.addView(getLinearLayout(new_textarea, label,ObjectTypes.colors[colorPos]), layoutParams);
+                        layout.addView(getLinearLayout(new_textarea, visible_fields+". "+label,ObjectTypes.colors[colorPos]), layoutParams);
                         fieldList.add(new_textarea);
                     }
                 }
@@ -181,15 +203,8 @@ public class FormFragment extends Fragment {
             e.printStackTrace();
         }
 
-        Button submit_button = new Button(getActivity());
-        submit_button.setText("Submit");
-        layout.addView(submit_button, layoutParams);
-        submit_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                submitForm();
-            }
-        });
+
+
         return inflatedView;
     }
 
@@ -240,7 +255,7 @@ public class FormFragment extends Fragment {
         public void onFragmentInteraction(Uri uri);
     }
 
-    private void submitForm(){
+    private void submitForm(Boolean draft){
         List switch_values = new ArrayList();
         Integer visible_checkboxes_checked = 0;
 
@@ -279,6 +294,7 @@ public class FormFragment extends Fragment {
             outputMap.put("indicator_id", incoming_indicator.getInt("id"));
             outputMap.put("location_id", location_json.getInt("id"));
             outputMap.put("score", score);
+            outputMap.put("draft", draft);
             outputMap.put("title", incoming_indicator.getString("title")+" "+contentQueryMaker.getCurrentTimeStamp());
             //add the row_id so we can update instead of insert if there was a pre-existing record (aka we are editing)
             if(incoming_record != null){
@@ -292,7 +308,11 @@ public class FormFragment extends Fragment {
         Log.d("valueJSON", outputJSON.toString());
         save_to_provider(getActivity().getContentResolver().acquireContentProviderClient(Contract.Entry.CONTENT_URI), outputJSON.toString(), ObjectTypes.TYPE_RECORD, -1);
         FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, MessageFragment.newInstance(incoming_location_json_string,incoming_indicator_string,Float.toString(score), "OUTBOX")).addToBackStack(null).commit();
+        String destination = "OUTBOX";
+        if(draft){
+            destination = "DRAFTS";
+        }
+        fragmentManager.beginTransaction().replace(R.id.content_frame, MessageFragment.newInstance(incoming_location_json_string,incoming_indicator_string,Float.toString(score), destination)).addToBackStack(null).commit();
 
     }
 

@@ -104,7 +104,7 @@ public class MainActivity extends Activity {
         getContentResolver().registerContentObserver(Contract.Entry.CONTENT_URI, false, contentObserver);
 
 
-        mPlanetTitles = new String[]{"Change User", "Set Location", "Outbox", "Open Web App", "Settings"};
+        mPlanetTitles = new String[]{"Change User", "Set Location", "Outbox", "Drafts","Open Web App", "Settings"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
@@ -125,13 +125,11 @@ public class MainActivity extends Activity {
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
-                getActionBar().setTitle(mTitle);
             }
 
             /** Called when a drawer has settled in a completely open state. */
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
-                getActionBar().setTitle(mDrawerTitle);
             }
         };
 
@@ -337,10 +335,13 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void clear_backStack(){
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+    }
     private void launchFragment(Fragment fragment) {
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
     }
 
@@ -394,17 +395,22 @@ public class MainActivity extends Activity {
 
         } else if (position == 1) {
             //set location
+            clear_backStack();
             launchFragment(new LocationPickFragment());
         }  else if (position == 2) {
-            launchFragment(new OutboxFragment());
-        }else if (position == 3) {
+            clear_backStack();
+            launchFragment(OutboxFragment.newInstance("OUTBOX"));
+        }  else if (position == 3) {
+            clear_backStack();
+            launchFragment(OutboxFragment.newInstance("DRAFTS"));
+        }else if (position == 4) {
             //open in web app
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
             String hostname = settings.getString("example_text", "NO HOSTNAME");
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(hostname));
             startActivity(browserIntent);
 
-        } else if (position == 4) {
+        } else if (position == 5) {
             //open settings
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);

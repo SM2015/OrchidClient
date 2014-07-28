@@ -33,7 +33,32 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="bottom"></LinearLayout>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true">
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/save_as_draft_internal_name"
+                    android:id="@+id/button_draft"
+                    android:textColor="#ffffff"
+                    android:background="#53585f"
+                    android:layout_marginRight="@dimen/abc_action_bar_icon_vertical_padding" />
 
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/submit_internal_name"
+                    android:id="@+id/button_outbox"
+                    android:background="#53585f"
+                    android:textColor="#ffffff"
+                    android:layout_marginLeft="@dimen/abc_action_bar_icon_vertical_padding" />
+            </LinearLayout>
         </RelativeLayout>
     </ScrollView>
 </FrameLayout>

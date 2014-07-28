@@ -39,6 +39,7 @@ import neuman.orchidclient.authentication.AccountGeneral;
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.Contract;
 import neuman.orchidclient.content.ObjectTypes;
+import neuman.orchidclient.models.Record;
 
 /**
  * Handle the transfer of data between a server and an
@@ -305,50 +306,56 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
                 try{
                     JSONObject record_data = new JSONObject(jsonString);
-                    String responseString = "no response";
+                    //make sure we're only pushing up non draft records
+                    if(record_data.getBoolean("draft")!=true) {
+                        Record newItem = new Record(record_data);
 
-                    Log.d(TAG, "authtoken: "+authtoken);
-                    try {
+                        String responseString = "no response";
 
-                        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("Android");
-                        HttpPost request = new HttpPost(record_data.getString("outgoing_url"));
-                        request.setHeader("X_REQUESTED_WITH", "XMLHttpRequest");
-                        String cookiestring = "sessionid="+authtoken;
-                        Log.d(TAG,"Cookiestring: "+cookiestring);
-                        request.addHeader("Cookie", cookiestring);
-                        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-                        JSONArray values_json_array = record_data.getJSONArray("values");
-                        nameValuePairs.add(new BasicNameValuePair("json",jsonString ));
+                        Log.d(TAG, "authtoken: " + authtoken);
+                        try {
 
-                        request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-                        HttpResponse response = httpclient.execute(request);
-                        StatusLine statusLine = response.getStatusLine();
-                        if(statusLine.getStatusCode() == HttpStatus.SC_OK){
-                            ByteArrayOutputStream out = new ByteArrayOutputStream();
-                            response.getEntity().writeTo(out);
-                            out.close();
-                            responseString = out.toString();
-                            Log.d(TAG, responseString);
-                            JSONObject response_JSON = new JSONObject(responseString);
-                            if (response_JSON.getString("status").equals("success")){
-                                contentQueryMaker.drop_row(mCursor.getInt(0));
-                                contentQueryMaker.insert_message("New Record With ID"+response_JSON.getString("record_id")+"Successfully Synchronized");
-                            }else{
-                                contentQueryMaker.insert_message("Problem Synchronizing Record");
+                            AndroidHttpClient httpclient = AndroidHttpClient.newInstance("Android");
+                            HttpPost request = new HttpPost(record_data.getString("outgoing_url"));
+                            request.setHeader("X_REQUESTED_WITH", "XMLHttpRequest");
+                            String cookiestring = "sessionid=" + authtoken;
+                            Log.d(TAG, "Cookiestring: " + cookiestring);
+                            request.addHeader("Cookie", cookiestring);
+                            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+                            JSONArray values_json_array = record_data.getJSONArray("values");
+                            nameValuePairs.add(new BasicNameValuePair("json", jsonString));
+
+                            request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+                            HttpResponse response = httpclient.execute(request);
+                            StatusLine statusLine = response.getStatusLine();
+                            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+                                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                                response.getEntity().writeTo(out);
+                                out.close();
+                                responseString = out.toString();
+                                Log.d(TAG, responseString);
+                                JSONObject response_JSON = new JSONObject(responseString);
+                                if (response_JSON.getString("status").equals("success")) {
+                                    contentQueryMaker.drop_row(mCursor.getInt(0));
+                                    contentQueryMaker.insert_message("New Record With ID" + response_JSON.getString("record_id") + "Successfully Synchronized");
+                                } else {
+                                    contentQueryMaker.insert_message("Problem Synchronizing Record");
+                                }
+
+                            } else {
+                                //Closes the connection.
+                                response.getEntity().getContent().close();
+                                contentQueryMaker.insert_message(statusLine.getReasonPhrase());
+                                throw new IOException(statusLine.getReasonPhrase());
                             }
 
-                        } else{
-                            //Closes the connection.
-                            response.getEntity().getContent().close();
-                            contentQueryMaker.insert_message(statusLine.getReasonPhrase());
-                            throw new IOException(statusLine.getReasonPhrase());
+
+                        } catch (Exception e) {
+                            Log.d("HTTP exception", e.toString());
+                            e.printStackTrace();
+                            contentQueryMaker.insert_message(e.toString());
+
                         }
-
-                    }catch(Exception e){
-                        Log.d("HTTP exception", e.toString());
-                        e.printStackTrace();
-                        contentQueryMaker.insert_message(e.toString());
-
                     }
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());

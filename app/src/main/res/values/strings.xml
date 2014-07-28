@@ -32,5 +32,7 @@
     <string name="gps_internal_name">USE CURRENT LOCATION</string>
     <string name="change_password_internal_name">Change Password</string>
     <string name="forgot_password_internal_name">Forgot Password?</string>
+    <string name="submit_internal_name">Submit</string>
+    <string name="save_as_draft_internal_name">Save As Draft</string>
 
 </resources>

@@ -80,12 +80,13 @@ public class LocationPickFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        ((MainActivity)getActivity()).set_action_bar_title("Choose Location");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        ((MainActivity)getActivity()).set_action_bar_title("Choose Location");
+
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_location_pick, container, false);
 
