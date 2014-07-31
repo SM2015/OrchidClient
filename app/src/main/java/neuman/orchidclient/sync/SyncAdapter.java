@@ -306,8 +306,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
                 try{
                     JSONObject record_data = new JSONObject(jsonString);
-                    //make sure we're only pushing up non draft records
-                    if(record_data.getBoolean("draft")!=true) {
+                    Record record = new Record(record_data);
+                    //make sure we're only pushing up non draft records that have been scored
+                    if((record.is_scored())&&(record_data.getBoolean("draft")!=true)){
                         Record newItem = new Record(record_data);
 
                         String responseString = "no response";
