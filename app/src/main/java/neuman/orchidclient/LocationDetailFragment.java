@@ -103,20 +103,9 @@ public class LocationDetailFragment extends Fragment {
             Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_INDICATOR);
             // Some providers return null if an error occurs, others throw an exception
             if (null == mCursor) {
-    /*
-     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
-     * call android.util.Log.e() to log this error.
-     *
-     */
                 // If the Cursor is empty, the provider found no matches
                 Log.d(TAG, "Cursor Error");
             } else if (mCursor.getCount() < 1) {
-
-    /*
-     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
-     * an error. You may want to offer the user the option to insert a new row, or re-type the
-     * search term.
-     */
                 Log.d(TAG, "No results");
 
             } else {

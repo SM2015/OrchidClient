@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -41,10 +42,14 @@ public class ScoringFragment extends Fragment {
     private ListView listView;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_DEST = "param1";
+    private static final String ARG_LOCATION = "location_json_string";
 
     // TODO: Rename and change types of parameters
     private Boolean drafts;
+
+    private String location_json_string;
+    private JSONObject location_json;
+    private ArrayList<Integer> indicator_ids;
 
     private OnFragmentInteractionListener mListener;
 
@@ -52,14 +57,14 @@ public class ScoringFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
+     * @param location_json_string Parameter
      * @return A new instance of fragment OutboxFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static ScoringFragment newInstance(String param1) {
+    public static ScoringFragment newInstance(String location_json_string) {
         ScoringFragment fragment = new ScoringFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_DEST, param1);
+        args.putString(ARG_LOCATION, location_json_string);
         fragment.setArguments(args);
         return fragment;
     }
@@ -71,12 +76,24 @@ public class ScoringFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            if(getArguments().getString(ARG_DEST).equals("DRAFTS")){
-                drafts = true;
-            }
-            else{
-                drafts = false;
+            location_json_string = getArguments().getString(ARG_LOCATION);
+            try{
+                location_json = new JSONObject(location_json_string);
+                ((MainActivity)getActivity()).set_action_bar_title(location_json.get("title").toString()+": Select Indicator");
+                JSONArray indicator_ids_json;
+                indicator_ids = new ArrayList<Integer>();
+                indicator_ids_json = location_json.getJSONArray("indicator_ids");
+                // ignore the case of a non-array value.
+                if (indicator_ids_json != null) {
 
+                    // Extract numbers from JSON array.
+                    for (int i = 0; i < indicator_ids_json.length(); ++i) {
+
+                        indicator_ids.add(indicator_ids_json.optInt(i));
+                    }
+                }
+            }catch(JSONException e){
+                Log.d(TAG, e.toString());
             }
         }
     }
@@ -98,7 +115,7 @@ public class ScoringFragment extends Fragment {
 
         contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
         //get each indicator
-        Boolean indicatorPass = true;
+
         ArrayList<Integer> checkbox_field_ids = new ArrayList<Integer>();
         indicators = new ArrayList<Indicator>();
         Cursor indicatorCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_INDICATOR);
@@ -117,7 +134,10 @@ public class ScoringFragment extends Fragment {
                 try{
                     JSONObject indicator_json = new JSONObject(jsonString);
                     Indicator indicator = new Indicator(indicator_json);
-                    indicators.add(indicator);
+                    //add the indicator if it exists in the given location's indicator list
+                    if(indicator_ids.contains(indicator.getId())) {
+                        indicators.add(indicator);
+                    }
                     //ad the indicators checkbox field ids to the array list for later reference
                     checkbox_field_ids.addAll(indicator.get_boolean_field_ids());
 
@@ -142,7 +162,8 @@ public class ScoringFragment extends Fragment {
                 String jsonString = recordCursor.getString(2);
                 try{
                     JSONObject record_json = new JSONObject(jsonString);
-                    if(record_json.getBoolean("draft")==false){
+                    //ignore any records not from this location
+                    if((record_json.getBoolean("draft")==false) && (record_json.getInt("location_id")==location_json.getInt("id"))){
                         record_json.put("row_id", recordCursor.getInt(0));
                         Record record = new Record(record_json);
                         Indicator record_indicator = get_indicator(indicators, record.getIndicatorID());
