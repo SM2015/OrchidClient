@@ -44,6 +44,15 @@ public class Item {
         this.json = j;
     }
 
+    public void put(String key, Object value){
+        try {
+            this.json.put(key, value);
+        }
+        catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
+
     public Object get(String key) {
 
         try{

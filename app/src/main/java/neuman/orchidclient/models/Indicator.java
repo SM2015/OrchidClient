@@ -67,4 +67,12 @@ public class Indicator extends Item {
             return null;
         }
     }
+
+    public Integer getTotal_records(){
+        return total_records;
+    }
+
+    public Integer getPassing_records(){
+        return passing_records;
+    }
 }

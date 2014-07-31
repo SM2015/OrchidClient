@@ -1,10 +1,13 @@
 package neuman.orchidclient;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,8 +40,9 @@ import neuman.orchidclient.util.ScoreArrayAdapter;
 public class ScoringFragment extends Fragment {
     private String TAG = getClass().getSimpleName();
     private ContentQueryMaker contentQueryMaker;
-    private Button button_sync;
+    private Button button_submit;
     ArrayList<Indicator> indicators;
+    ArrayList<Record> scored_records;
     private ListView listView;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -50,6 +54,7 @@ public class ScoringFragment extends Fragment {
     private String location_json_string;
     private JSONObject location_json;
     private ArrayList<Integer> indicator_ids;
+    private JSONObject outgoing_score;
 
     private OnFragmentInteractionListener mListener;
 
@@ -79,7 +84,7 @@ public class ScoringFragment extends Fragment {
             location_json_string = getArguments().getString(ARG_LOCATION);
             try{
                 location_json = new JSONObject(location_json_string);
-                ((MainActivity)getActivity()).set_action_bar_title(location_json.get("title").toString()+": Select Indicator");
+                ((MainActivity)getActivity()).set_action_bar_title("Score: "+location_json.getString("title"));
                 JSONArray indicator_ids_json;
                 indicator_ids = new ArrayList<Integer>();
                 indicator_ids_json = location_json.getJSONArray("indicator_ids");
@@ -147,6 +152,7 @@ public class ScoringFragment extends Fragment {
                 }
             }
         }
+        scored_records = new ArrayList<Record>();
         //get first n record for the indicator in order of date input
         Cursor recordCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_RECORD);
         // Some providers return null if an error occurs, others throw an exception
@@ -162,10 +168,14 @@ public class ScoringFragment extends Fragment {
                 String jsonString = recordCursor.getString(2);
                 try{
                     JSONObject record_json = new JSONObject(jsonString);
+                    Record record = new Record(record_json);
                     //ignore any records not from this location
-                    if((record_json.getBoolean("draft")==false) && (record_json.getInt("location_id")==location_json.getInt("id"))){
+                    if((record.is_scored()!=true)&&(record_json.getBoolean("draft")==false) && (record_json.getInt("location_id")==location_json.getInt("id"))){
                         record_json.put("row_id", recordCursor.getInt(0));
-                        Record record = new Record(record_json);
+                        //stick this in the json so if we store it back to the db it will remember having been scored already
+                        record.put("scored", true);
+                        //add to list for later marking as permanently scored
+                        scored_records.add(record);
                         Indicator record_indicator = get_indicator(indicators, record.getIndicatorID());
                         record_indicator.incrementTotal_records();
                         if(record.is_passing(checkbox_field_ids)){
@@ -182,22 +192,76 @@ public class ScoringFragment extends Fragment {
             }
         }
 
-        button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
-        ((MainActivity)getActivity()).set_action_bar_title("Score");
+        button_submit = (Button) inflatedView.findViewById(R.id.button_submit_score);
+        button_submit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //make sure they are ready to submit
+                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case DialogInterface.BUTTON_POSITIVE:
+                                //Yes button clicked
+                                mark_rows_as_scored();
+                                submit_score();
+                                break;
+
+                            case DialogInterface.BUTTON_NEGATIVE:
+                                //No button clicked
+                                break;
+                        }
+                    }
+                };
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setMessage("Are you sure you're ready to submit this score? If you select yes there is no way to undo this action.").setPositiveButton("Yes", dialogClickListener)
+                        .setNegativeButton("No", dialogClickListener).show();
+
+            }
+        });
 
         listView = (ListView) inflatedView.findViewById(R.id.listView);
 
         Log.d(TAG, "Indicators arraylist: "+indicators.toString());
         ArrayList<Indicator> items = new ArrayList<Indicator>();
+        outgoing_score = new JSONObject();
+        ArrayList<JSONObject> outgoing_scores = new ArrayList<JSONObject>();
+
         for(Indicator i : indicators){
-            //Float percentage = i.getPercentage();
+            Float percentage = i.getPercentage();
+            Boolean is_passing = percentage>i.getPassing_percentage();
+            try {
+                Time today = new Time(Time.getCurrentTimezone());
+                today.setToNow();
+                JSONObject indicator_score = new JSONObject();
+                indicator_score.put("title", location_json.get("title")+" Score");
+                indicator_score.put("percentage", percentage);
+                indicator_score.put("location_id", location_json.getString("id"));
+                indicator_score.put("indicator_id", i.getId());
+                indicator_score.put("total_record_count",i.getTotal_records());
+                indicator_score.put("total_record_count", i.getPassing_records());
+                indicator_score.put("passing", is_passing);
+                indicator_score.put("month", today.month);
+                indicator_score.put("year", today.year);
+                outgoing_scores.add(indicator_score);
+            }catch (JSONException e){
+                e.printStackTrace();
+            }
             //Indicator temp_item = new Indicator(percentage.toString()+" | "+i.getTitle());
-            if(i.getPercentage()>i.getPassing_percentage()){
+            if(is_passing){
                 i.color =ObjectTypes.COLOR_GREEN;
             }else{
                 i.color =ObjectTypes.COLOR_RED;
             }
             //items.add(temp_item);
+
+        }
+        //store the array of indicators in the outgoing_score json for later saving to the db if submitted
+        try {
+            outgoing_score.put("scores", outgoing_scores);
+        }catch (JSONException e){
+            e.printStackTrace();
         }
         ScoreArrayAdapter adapter = new ScoreArrayAdapter(getActivity(), R.layout.score_list_item, indicators);
 
@@ -240,6 +304,17 @@ public class ScoringFragment extends Fragment {
         // TODO: Update argument type and name
         public void onFragmentInteraction(Uri uri);
     }
+
+    private void mark_rows_as_scored(){
+        for(Record r : scored_records) {
+
+            contentQueryMaker.update_row_json(r.getJSON().toString(), r.get_row_id());
+        }
+    }
+    private void submit_score(){
+        contentQueryMaker.save_to_provider(outgoing_score.toString(), ObjectTypes.TYPE_SCORE,null);
+    }
+
 
 
 }

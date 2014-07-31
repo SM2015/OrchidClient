@@ -3,6 +3,7 @@ package neuman.orchidclient.content;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.net.Uri;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -200,6 +201,73 @@ public class ContentQueryMaker {
         Date now = new Date();
         String strDate = sdfDate.format(now);
         return strDate;
+    }
+
+    public void update_row_json(String json_string, Integer row_id){
+            String mSelectionClause = null;
+            // Defines a new Uri object that receives the result of the insertion
+            Uri mNewUri;
+            // Defines an object to contain the new values to insert
+            ContentValues mNewValues = new ContentValues();
+            try {
+                JSONObject json = new JSONObject(json_string);
+                Log.d(TAG, "update row with json: "+json_string);
+                row_id = json.getInt("row_id");
+                mSelectionClause = "_ID"+" = "+row_id;
+                Log.d(TAG, "Trying to save to :"+mSelectionClause);
+            }catch(JSONException e){
+                e.printStackTrace();
+            }
+        /*
+         * Sets the values of each column and inserts the json. The arguments to the "put"
+         * method are "column name" and "value"
+         */
+            mNewValues.put(Contract.Entry.COLUMN_NAME_JSON, json_string);
+            this.contentResolver.update( Contract.Entry.CONTENT_URI, mNewValues, mSelectionClause, null );
+
+    }
+
+    public void save_to_provider(String json_string, Integer object_type, Integer model_id){
+            Integer row_id = null;
+            String mSelectionClause = null;
+            // Defines a new Uri object that receives the result of the insertion
+            Uri mNewUri;
+
+            // Defines an object to contain the new values to insert
+            ContentValues mNewValues = new ContentValues();
+
+
+            try {
+                JSONObject json = new JSONObject(json_string);
+                Log.d(TAG, "save_to_provider: "+json_string);
+                mSelectionClause =
+                        Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+object_type
+                                +" AND "+"_ID"+" = "+row_id;
+                Log.d(TAG, "Trying to save to :"+mSelectionClause);
+            }catch(JSONException e){
+                e.printStackTrace();
+            }
+
+
+
+        /*
+         * Sets the values of each column and inserts the word. The arguments to the "put"
+         * method are "column name" and "value"
+         */
+            mNewValues.put(Contract.Entry.COLUMN_NAME_OBJECTTYPE, object_type);
+            mNewValues.put(Contract.Entry.COLUMN_NAME_JSON, json_string);
+            if(model_id !=null) {
+                mNewValues.put(Contract.Entry.COLUMN_NAME_MODEL_ID, model_id);
+            }
+
+
+            if(row_id != null){
+                this.contentResolver.update( Contract.Entry.CONTENT_URI, mNewValues, mSelectionClause, null );
+            }
+            else{
+                this.contentResolver.insert(Contract.Entry.CONTENT_URI, mNewValues);
+            }
+
     }
 
 }

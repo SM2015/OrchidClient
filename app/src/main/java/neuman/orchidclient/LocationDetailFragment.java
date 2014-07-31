@@ -44,6 +44,8 @@ public class LocationDetailFragment extends Fragment {
     private ListView listView;
     private ArrayList<Item> items = new ArrayList<Item>();
     private Button button_score;
+    private View view_main;
+    private View view_datepicker;
 
     // TODO: Rename and change types of parameters
     private String location_json_string;
@@ -89,10 +91,14 @@ public class LocationDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_location_detail, container, false);
+        view_main = (View) inflatedView.findViewById(R.id.mainView);
+        view_datepicker = (View) inflatedView.findViewById(R.id.datePickerView);
         button_score = (Button) inflatedView.findViewById(R.id.button_score);
         button_score.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //view_main.setVisibility(View.INVISIBLE);
+                //view_datepicker.setVisibility(View.VISIBLE);
                 FragmentManager fragmentManager = getFragmentManager();
                 fragmentManager.beginTransaction().replace(R.id.content_frame, ScoringFragment.newInstance(location_json.toString())).addToBackStack(null).commit();
 

@@ -33,6 +33,19 @@ public class Record extends Item {
         return (Integer) get("location_id");
     }
 
+    public Integer get_row_id() {
+
+        return (Integer) get("row_id");
+    }
+
+    public Boolean is_scored(){
+        Boolean scored = (Boolean) this.get("scored");
+        if(scored!=null){
+            return scored;
+        }
+        return false;
+    }
+
     public JSONArray getValues(){
         return getJSONArray("values");
     }
