@@ -6,6 +6,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 import neuman.orchidclient.content.ObjectTypes;
 
 /**
@@ -15,8 +17,9 @@ public class Record extends Item {
 
 
     public Record(JSONObject j){
-        this.setJSON(j);
-        this.setTitle(getTitle());
+        super(j);
+        //this.setJSON(j);
+        //this.setTitle(getTitle());
 
     }
 
@@ -50,6 +53,25 @@ public class Record extends Item {
         Log.d(TAG, "Couldn't getFieldValue("+field_id+")");
         return null;
 
+    }
+
+    public Boolean is_passing(ArrayList<Integer> checkbox_field_ids){
+        JSONArray values = getValues();
+        try{
+            //look through all values checking to see if any checkboxes are false
+            for (int i = 0 ; i < values.length(); i++) {
+                JSONObject obj = values.getJSONObject(i);
+                if (checkbox_field_ids.contains(obj.getInt("field_id"))){
+                    if(obj.get("value").equals(false)){
+                        return false;
+                    }
+                }
+            }
+        }catch(JSONException e){
+            Log.d(this.TAG, e.toString());
+            e.printStackTrace();
+        }
+        return true;
     }
 
     public Indicator getIndicator(){

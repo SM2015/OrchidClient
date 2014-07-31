@@ -13,19 +13,30 @@ import neuman.orchidclient.content.ContentQueryMaker;
  * Created by neuman on 7/15/14.
  */
 public class Item {
-    private String title;
+    private String title = "No Title";
     private JSONObject json;
     protected String TAG = getClass().getSimpleName();
     protected ContentQueryMaker contentQueryMaker;
+    public int color = -1;
 
     public Item(){
+        this.json = new JSONObject();
 
     }
 
+    public Item(String title){
+        this.title = title;
+        this.json = new JSONObject();
+    }
+
     public Item(JSONObject j){
-        this.title = getTitle();
+        try{
+            this.title = j.getString("title");
+        }catch(JSONException e){
+
+        }
+
         this.json = j;
-        Log.d(TAG, "%%%%%%%%%%%% item created %%%%%%%%%%");
     }
 
     public Item(String i, JSONObject j){
@@ -40,10 +51,12 @@ public class Item {
             return record.get(key);
 
         }catch(JSONException e){
-            Log.d(this.TAG, e.toString());
-            e.printStackTrace();
         }
         return null;
+    }
+
+    public Integer getId(){
+        return (Integer)this.get("id");
     }
 
     public JSONArray getJSONArray(String key) {
@@ -59,17 +72,13 @@ public class Item {
     }
 
     public String getTitle() {
-        this.setTitle((String) get("title"));
-        if(this.title == null)
-        {
-            return "No Title";
-        }
-        return title;
+        return this.title;
     }
 
     public void setTitle(String name) {
         this.title = name;
     }
+
 
     public JSONObject getJSON() {
         //Log.d(TAG, "item JSON: "+json);

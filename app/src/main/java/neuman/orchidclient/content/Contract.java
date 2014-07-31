@@ -76,6 +76,5 @@ public class Contract {
          */
         public static final String COLUMN_NAME_JSON = "json";
 
-
     }
 }

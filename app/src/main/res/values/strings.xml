@@ -8,16 +8,6 @@
     <string name="spanish_button_name">Spanish</string>
     <string name="title_activity_pick_location">PickLocationActivity</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string-array name="planets_array">
-        <item>Mercury</item>
-        <item>Venus</item>
-        <item>Earth</item>
-        <item>Mars</item>
-        <item>Jupiter</item>
-        <item>Saturn</item>
-        <item>Uranus</item>
-        <item>Neptune</item>
-    </string-array>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
     <string name="action_websearch">Web search</string>
@@ -25,6 +15,7 @@
     <string name="submit_text">Submit</string>
     <string name="hostname">http://192.168.1.119</string>
     <string name="sync_internal_name">Sync Outbox</string>
+    <string name="score_internal_name">Score Records</string>
     <string name="choose_different_indicator">Choose Different Indicator</string>
     <string name="repeat_indicator">Repeat Indicator</string>
     <string name="yes_internal_name">Yes</string>

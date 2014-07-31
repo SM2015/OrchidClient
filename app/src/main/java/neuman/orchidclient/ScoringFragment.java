@@ -2,7 +2,6 @@ package neuman.orchidclient;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,7 +9,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 
@@ -21,9 +19,9 @@ import java.util.ArrayList;
 
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
-import neuman.orchidclient.models.Location;
+import neuman.orchidclient.models.Indicator;
 import neuman.orchidclient.models.Record;
-import neuman.orchidclient.util.JSONArrayAdapter;
+import neuman.orchidclient.util.ScoreArrayAdapter;
 
 
 /**
@@ -35,14 +33,12 @@ import neuman.orchidclient.util.JSONArrayAdapter;
  * create an instance of this fragment.
  *
  */
-public class OutboxFragment extends Fragment {
+public class ScoringFragment extends Fragment {
     private String TAG = getClass().getSimpleName();
     private ContentQueryMaker contentQueryMaker;
     private Button button_sync;
-
-
+    ArrayList<Indicator> indicators;
     private ListView listView;
-    private ArrayList<Record> items = new ArrayList<Record>();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_DEST = "param1";
@@ -60,14 +56,14 @@ public class OutboxFragment extends Fragment {
      * @return A new instance of fragment OutboxFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static OutboxFragment newInstance(String param1) {
-        OutboxFragment fragment = new OutboxFragment();
+    public static ScoringFragment newInstance(String param1) {
+        ScoringFragment fragment = new ScoringFragment();
         Bundle args = new Bundle();
         args.putString(ARG_DEST, param1);
         fragment.setArguments(args);
         return fragment;
     }
-    public OutboxFragment() {
+    public ScoringFragment() {
         // Required empty public constructor
     }
 
@@ -85,102 +81,107 @@ public class OutboxFragment extends Fragment {
         }
     }
 
+    private Indicator get_indicator(ArrayList<Indicator> indicators, Integer indicator_id){
+        for (Indicator i : indicators) {
+            if (i.getId().equals(indicator_id)){
+                return i;
+            }
+        }
+        return null;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View inflatedView = inflater.inflate(R.layout.fragment_outbox, container, false);
+        View inflatedView = inflater.inflate(R.layout.fragment_scoring, container, false);
 
         contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_RECORD);
+        //get each indicator
+        Boolean indicatorPass = true;
+        ArrayList<Integer> checkbox_field_ids = new ArrayList<Integer>();
+        indicators = new ArrayList<Indicator>();
+        Cursor indicatorCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_INDICATOR);
         // Some providers return null if an error occurs, others throw an exception
-        if (null == mCursor) {
-    /*
-     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
-     * call android.util.Log.e() to log this error.
-     *
-     */
+        if (null == indicatorCursor) {
             // If the Cursor is empty, the provider found no matches
             Log.d(TAG, "Cursor Error");
-        } else if (mCursor.getCount() < 1) {
+        } else if (indicatorCursor.getCount() < 1) {
 
-    /*
-     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
-     * an error. You may want to offer the user the option to insert a new row, or re-type the
-     * search term.
-     */
-            Log.d(TAG,"No results");
+            Log.d(TAG,"No Indicator results");
 
         } else {
             // Insert code here to do something with the results
-            while (mCursor.moveToNext()) {
-                String jsonString = mCursor.getString(2);
+            while (indicatorCursor.moveToNext()) {
+                String jsonString = indicatorCursor.getString(2);
                 try{
-                    JSONObject record_json = new JSONObject(jsonString);
-                    if(record_json.getBoolean("draft")==drafts){
-                        record_json.put("row_id", mCursor.getInt(0));
-                        Record newItem = new Record(record_json);
-                        items.add(newItem);}
+                    JSONObject indicator_json = new JSONObject(jsonString);
+                    Indicator indicator = new Indicator(indicator_json);
+                    indicators.add(indicator);
+                    //ad the indicators checkbox field ids to the array list for later reference
+                    checkbox_field_ids.addAll(indicator.get_boolean_field_ids());
+
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();
                 }
             }
         }
-        button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
-        if(drafts){
-            ((MainActivity)getActivity()).set_action_bar_title("Drafts");
-            button_sync.setVisibility(View.GONE);
-        }else {
-            ((MainActivity)getActivity()).set_action_bar_title("Outbox");
-            button_sync.setVisibility(View.VISIBLE);
-            button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
-            button_sync.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    ((MainActivity) getActivity()).attemptSync();
-                    FragmentManager fragmentManager = getFragmentManager();
-                    fragmentManager.popBackStack();
+        //get first n record for the indicator in order of date input
+        Cursor recordCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_RECORD);
+        // Some providers return null if an error occurs, others throw an exception
+        if (null == recordCursor) {
+            // If the Cursor is empty, the provider found no matches
+            Log.d(TAG, "Cursor Error");
+        } else if (recordCursor.getCount() < 1) {
+
+           Log.d(TAG,"No results");
+
+        } else {
+            while (recordCursor.moveToNext()) {
+                String jsonString = recordCursor.getString(2);
+                try{
+                    JSONObject record_json = new JSONObject(jsonString);
+                    if(record_json.getBoolean("draft")==false){
+                        record_json.put("row_id", recordCursor.getInt(0));
+                        Record record = new Record(record_json);
+                        Indicator record_indicator = get_indicator(indicators, record.getIndicatorID());
+                        record_indicator.incrementTotal_records();
+                        if(record.is_passing(checkbox_field_ids)){
+                            //if it passes, add it to the tally for percentages later
+                            record_indicator.incrementPassing_records();
+                        }else{
+                            Log.d(TAG, "record didn't pass");
+                        }
+                    }
+                }catch(JSONException e){
+                    Log.d(TAG, e.toString());
+                    e.printStackTrace();
                 }
-            });
+            }
         }
+
+        button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
+        ((MainActivity)getActivity()).set_action_bar_title("Score");
 
         listView = (ListView) inflatedView.findViewById(R.id.listView);
 
-        // Define a new Adapter
-        // First parameter - Context
-        // Second parameter - Layout for the row
-        // Third parameter - ID of the TextView to which the data is written
-        // Forth - the Array of data
-
-
-
-        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, items);
+        Log.d(TAG, "Indicators arraylist: "+indicators.toString());
+        ArrayList<Indicator> items = new ArrayList<Indicator>();
+        for(Indicator i : indicators){
+            //Float percentage = i.getPercentage();
+            //Indicator temp_item = new Indicator(percentage.toString()+" | "+i.getTitle());
+            if(i.getPercentage()>i.getPassing_percentage()){
+                i.color =ObjectTypes.COLOR_GREEN;
+            }else{
+                i.color =ObjectTypes.COLOR_RED;
+            }
+            //items.add(temp_item);
+        }
+        ScoreArrayAdapter adapter = new ScoreArrayAdapter(getActivity(), R.layout.score_list_item, indicators);
 
         // Assign adapter to ListView
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapter, View v, int position,
-                                    long arg3) {
-
-                try{
-                    Record item = (Record) adapter.getItemAtPosition(position);
-                    item.setContentQueryMaker(contentQueryMaker);
-                    Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
-                    Log.d(TAG, "Clicked JSON" + item.getJSON().toString());
-                    FragmentManager fragmentManager = getFragmentManager();
-                    Location location = item.getLocation();
-                    String location_json_string = location.getJSON().toString();
-                    String indicator_json_string = item.getIndicator().getJSON().toString();
-
-                    fragmentManager.beginTransaction().replace(R.id.content_frame, FormFragment.newInstance(location_json_string,indicator_json_string, item.getJSON().toString())).addToBackStack(null).commit();
-
-                }catch(JSONException e){
-                    Log.d(TAG, e.toString());
-                }
-            }
-        });
 
         return inflatedView;
     }

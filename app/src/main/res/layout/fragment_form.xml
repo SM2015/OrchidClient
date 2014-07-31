@@ -1,64 +1,54 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="neuman.orchidclient.FormFragment">
+<?xml version="1.0" encoding="utf-8"?>
 
-    <!-- TODO: Update blank fragment layout -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
 
+    <LinearLayout
+        android:id="@+id/buttons"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_alignParentBottom="true">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/save_as_draft_internal_name"
+            android:id="@+id/button_draft"
+            android:textColor="#ffffff"
+            android:background="#53585f"
+            android:layout_marginRight="@dimen/abc_action_bar_icon_vertical_padding" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/submit_internal_name"
+            android:id="@+id/button_outbox"
+            android:background="#53585f"
+            android:textColor="#ffffff"
+            android:layout_marginLeft="@dimen/abc_action_bar_icon_vertical_padding" />
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:id="@+id/scrollView"
-        android:layout_gravity="top" >
-        <RelativeLayout
+        android:layout_above="@id/buttons">
+        <!--Scrollable content here-->
+        <LinearLayout
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center_horizontal|top"
-            android:id="@+id/ScrollingLinearLayout">
-
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_gravity="center"
             android:id="@+id/FieldsLinearLayout"
-            android:gravity="top">
-
-            </LinearLayout>
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="bottom"></LinearLayout>
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_alignParentBottom="true"
-                android:layout_centerHorizontal="true">
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/save_as_draft_internal_name"
-                    android:id="@+id/button_draft"
-                    android:textColor="#ffffff"
-                    android:background="#53585f"
-                    android:layout_marginRight="@dimen/abc_action_bar_icon_vertical_padding" />
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/submit_internal_name"
-                    android:id="@+id/button_outbox"
-                    android:background="#53585f"
-                    android:textColor="#ffffff"
-                    android:layout_marginLeft="@dimen/abc_action_bar_icon_vertical_padding" />
-            </LinearLayout>
-        </RelativeLayout>
+            android:gravity="top"></LinearLayout>
+        </LinearLayout>
     </ScrollView>
-</FrameLayout>
+
+</RelativeLayout>

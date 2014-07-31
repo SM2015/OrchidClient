@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="neuman.orchidclient.OutboxFragment">
+    tools:context="neuman.orchidclient.ScoringFragment">
 
     <!-- TODO: Update blank fragment layout -->
 
@@ -30,7 +30,8 @@
                 android:paddingTop="@dimen/stripe_button_padding"
                 android:paddingBottom="@dimen/stripe_button_padding"
                 android:textSize="@dimen/abc_action_bar_title_text_size" />
-        <ListView
+
+            <ListView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:id="@+id/listView"

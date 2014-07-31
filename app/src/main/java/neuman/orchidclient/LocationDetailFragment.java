@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 
 import org.json.JSONArray;
@@ -42,6 +43,7 @@ public class LocationDetailFragment extends Fragment {
     private ContentQueryMaker contentQueryMaker;
     private ListView listView;
     private ArrayList<Item> items = new ArrayList<Item>();
+    private Button button_score;
 
     // TODO: Rename and change types of parameters
     private String location_json_string;
@@ -87,6 +89,15 @@ public class LocationDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_location_detail, container, false);
+        button_score = (Button) inflatedView.findViewById(R.id.button_score);
+        button_score.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FragmentManager fragmentManager = getFragmentManager();
+                fragmentManager.beginTransaction().replace(R.id.content_frame, ScoringFragment.newInstance(location_json.toString())).addToBackStack(null).commit();
+
+            }
+        });
         if(items.isEmpty()) {
             contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
             Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_INDICATOR);
