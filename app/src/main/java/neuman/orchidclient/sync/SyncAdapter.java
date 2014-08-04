@@ -40,6 +40,7 @@ import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.Contract;
 import neuman.orchidclient.content.ObjectTypes;
 import neuman.orchidclient.models.Record;
+import neuman.orchidclient.models.Score;
 
 /**
  * Handle the transfer of data between a server and an
@@ -177,7 +178,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             e.printStackTrace();
             contentQueryMaker.insert_message(e.toString());
         }
-
+        push_new_scores(getContext().getContentResolver(), account);
         push_new_records(getContext().getContentResolver(),account);
 
         Log.i(TAG, "Network synchronization complete");
@@ -212,6 +213,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         } catch (RemoteException e) {
             Log.e(TAG, "Error updating database: " + e.toString());
+            e.printStackTrace();
             syncResult.databaseError = true;
             return;
         }
@@ -244,7 +246,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 throw new IOException(statusLine.getReasonPhrase());
             }
 
-        }catch(Exception e){
+        }catch(IOException e){
             Log.d("HTTP exception", e.toString());
             e.printStackTrace();
             contentQueryMaker.insert_message(e.toString());
@@ -369,5 +371,118 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         Log.d(TAG, "New Record Push Done");
     }
+
+    private void push_new_scores(ContentResolver contentResolver, Account account){
+        String authtoken = mAccountManager.peekAuthToken(account, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+        Log.d(TAG, "Preparing to Push New Records");
+        // A "projection" defines the columns that will be returned for each row
+        String[] mProjection =
+                {
+                        Contract.Entry._ID,    // Contract class constant for the _ID column name
+                        Contract.Entry.COLUMN_NAME_OBJECTTYPE,
+                        Contract.Entry.COLUMN_NAME_JSON,   // Contract class constant for the word column name
+                };
+
+        // Defines a string to contain the selection clause
+        String mSelectionClause =  Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+ ObjectTypes.TYPE_SCORE;
+
+        // Does a query against the table and returns a Cursor object
+
+        Log.d(TAG, Contract.Entry.CONTENT_URI.toString());
+        Log.d(TAG,"mProjection: "+mProjection.toString());
+        Cursor mCursor = contentResolver.query(
+                Contract.Entry.CONTENT_URI,  // The content URI of the words table
+                mProjection,                       // The columns to return for each row
+                mSelectionClause,                   // Either null, or the word the user entered
+                null,                    // Either empty, or the string the user entered
+                Contract.Entry.COLUMN_NAME_OBJECTTYPE);                       // The sort order for the returned rows
+
+        // Some providers return null if an error occurs, others throw an exception
+        if (null == mCursor) {
+    /*
+     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
+     * call android.util.Log.e() to log this error.
+     *
+     */
+            // If the Cursor is empty, the provider found no matches
+            Log.d(TAG,"Cursor Error");
+        } else if (mCursor.getCount() < 1) {
+
+    /*
+     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
+     * an error. You may want to offer the user the option to insert a new row, or re-type the
+     * search term.
+     */
+            Log.d(TAG,"No new scores to push");
+
+        } else {
+            Log.d(TAG, "New scores to push");
+            // Insert code here to do something with the results
+            while (mCursor.moveToNext()) {
+                Log.d(TAG,"*****CURSOR MOVED*****");
+                Log.d(TAG, mCursor.getColumnName(0)+": "+mCursor.getString(0));
+                Log.d(TAG, mCursor.getColumnName(1)+": "+mCursor.getString(1));
+                String jsonString = mCursor.getString(2);
+                Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
+                try{
+                    JSONObject score_data = new JSONObject(jsonString);
+                    Score score = new Score(score_data);
+                        String responseString = "no response";
+
+                        Log.d(TAG, "authtoken: " + authtoken);
+                        try {
+
+                            AndroidHttpClient httpclient = AndroidHttpClient.newInstance("Android");
+                            HttpPost request = new HttpPost(score_data.getString("outgoing_url"));
+                            request.setHeader("X_REQUESTED_WITH", "XMLHttpRequest");
+                            String cookiestring = "sessionid=" + authtoken;
+                            Log.d(TAG, "Cookiestring: " + cookiestring);
+                            request.addHeader("Cookie", cookiestring);
+                            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+                            nameValuePairs.add(new BasicNameValuePair("json", jsonString));
+
+                            request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+                            HttpResponse response = httpclient.execute(request);
+                            StatusLine statusLine = response.getStatusLine();
+                            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+                                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                                response.getEntity().writeTo(out);
+                                out.close();
+                                responseString = out.toString();
+                                Log.d(TAG, responseString);
+                                JSONObject response_JSON = new JSONObject(responseString);
+                                if (response_JSON.getString("status").equals("success")) {
+                                    contentQueryMaker.drop_row(mCursor.getInt(0));
+                                    contentQueryMaker.insert_message("New Score With ID" + response_JSON.getString("score_id") + "Successfully Synchronized");
+                                } else {
+                                    contentQueryMaker.insert_message("Problem Synchronizing Score");
+                                }
+
+                            } else {
+                                //Closes the connection.
+                                response.getEntity().getContent().close();
+                                contentQueryMaker.insert_message("HTTP Problem Synchronizing Score: "+statusLine.getReasonPhrase());
+                                throw new IOException(statusLine.getReasonPhrase());
+                            }
+
+
+                        } catch (Exception e) {
+                            Log.d("HTTP exception", e.toString());
+                            e.printStackTrace();
+                            contentQueryMaker.insert_message(e.toString());
+
+                        }
+                }catch(JSONException e){
+                    Log.d(TAG, e.toString());
+                    e.printStackTrace();
+                    contentQueryMaker.insert_message(e.toString());
+                }
+
+            }
+        }
+
+        Log.d(TAG, "New Record Push Done");
+    }
+
 
 }

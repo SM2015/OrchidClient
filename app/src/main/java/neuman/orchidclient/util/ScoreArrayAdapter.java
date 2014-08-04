@@ -69,7 +69,7 @@ public class ScoreArrayAdapter extends ArrayAdapter<Item> {
                     tt.setBackgroundColor(ObjectTypes.colors[colorPos]);
                     st.setBackgroundColor(ObjectTypes.colors[colorPos]);
                 }
-                st.setText(i.getPercentage().toString());
+                st.setText(i.getPercentage().toString()+"%");
                 //tt.setLayoutParams(new LinearLayout.LayoutParams(AbsListView.LayoutParams.WRAP_CONTENT, AbsListView.LayoutParams.WRAP_CONTENT));
             }
         }

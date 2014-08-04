@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,6 +44,7 @@ public class ScoringFragment extends Fragment {
     private ContentQueryMaker contentQueryMaker;
     private Button button_submit;
     ArrayList<Indicator> indicators;
+    Integer total_passing_indicators = 0;
     ArrayList<Record> scored_records;
     private ListView listView;
     // TODO: Rename parameter arguments, choose names that match
@@ -123,7 +126,7 @@ public class ScoringFragment extends Fragment {
 
         ArrayList<Integer> checkbox_field_ids = new ArrayList<Integer>();
         indicators = new ArrayList<Indicator>();
-        Cursor indicatorCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_INDICATOR);
+        Cursor indicatorCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_INDICATOR);
         // Some providers return null if an error occurs, others throw an exception
         if (null == indicatorCursor) {
             // If the Cursor is empty, the provider found no matches
@@ -154,7 +157,7 @@ public class ScoringFragment extends Fragment {
         }
         scored_records = new ArrayList<Record>();
         //get first n record for the indicator in order of date input
-        Cursor recordCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_RECORD);
+        Cursor recordCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_RECORD);
         // Some providers return null if an error occurs, others throw an exception
         if (null == recordCursor) {
             // If the Cursor is empty, the provider found no matches
@@ -224,33 +227,35 @@ public class ScoringFragment extends Fragment {
         listView = (ListView) inflatedView.findViewById(R.id.listView);
 
         Log.d(TAG, "Indicators arraylist: "+indicators.toString());
-        ArrayList<Indicator> items = new ArrayList<Indicator>();
         outgoing_score = new JSONObject();
-        ArrayList<JSONObject> outgoing_scores = new ArrayList<JSONObject>();
+        JSONArray outgoing_scores = new JSONArray();
+        Indicator percent_of_goals_met_indicator = new Indicator("Percent of Goals Met: ");
 
         for(Indicator i : indicators){
             Float percentage = i.getPercentage();
             Boolean is_passing = percentage>i.getPassing_percentage();
+            percent_of_goals_met_indicator.incrementTotal_records();
             try {
                 Time today = new Time(Time.getCurrentTimezone());
                 today.setToNow();
                 JSONObject indicator_score = new JSONObject();
-                indicator_score.put("title", location_json.get("title")+" Score");
                 indicator_score.put("percentage", percentage);
                 indicator_score.put("location_id", location_json.getString("id"));
                 indicator_score.put("indicator_id", i.getId());
                 indicator_score.put("total_record_count",i.getTotal_records());
-                indicator_score.put("total_record_count", i.getPassing_records());
+                indicator_score.put("passing_record_count", i.getPassing_records());
                 indicator_score.put("passing", is_passing);
-                indicator_score.put("month", today.month);
+                //months are 0 indexed in java so add 1
+                indicator_score.put("month", today.month+1);
                 indicator_score.put("year", today.year);
-                outgoing_scores.add(indicator_score);
+                outgoing_scores.put(indicator_score);
             }catch (JSONException e){
                 e.printStackTrace();
             }
             //Indicator temp_item = new Indicator(percentage.toString()+" | "+i.getTitle());
             if(is_passing){
                 i.color =ObjectTypes.COLOR_GREEN;
+                percent_of_goals_met_indicator.incrementPassing_records();
             }else{
                 i.color =ObjectTypes.COLOR_RED;
             }
@@ -259,10 +264,18 @@ public class ScoringFragment extends Fragment {
         }
         //store the array of indicators in the outgoing_score json for later saving to the db if submitted
         try {
+            indicators.add(percent_of_goals_met_indicator);
+
+            //build the outgoing score object
             outgoing_score.put("scores", outgoing_scores);
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String hostname = settings.getString("example_text", "NO HOSTNAME");
+            outgoing_score.put("title", "(SCORE) "+location_json.get("title")+" Timestamp:"+contentQueryMaker.getCurrentTimeStamp());
+            outgoing_score.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/score/upload/");
         }catch (JSONException e){
             e.printStackTrace();
         }
+
         ScoreArrayAdapter adapter = new ScoreArrayAdapter(getActivity(), R.layout.score_list_item, indicators);
 
         // Assign adapter to ListView

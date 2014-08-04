@@ -47,6 +47,7 @@ public class Record extends Item {
     }
 
     public JSONArray getValues(){
+        Log.d(TAG, "VALUES JSON: "+this.getJSON().toString());
         return getJSONArray("values");
     }
 

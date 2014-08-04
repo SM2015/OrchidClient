@@ -106,7 +106,7 @@ public class LocationDetailFragment extends Fragment {
         });
         if(items.isEmpty()) {
             contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-            Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_INDICATOR);
+            Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_INDICATOR);
             // Some providers return null if an error occurs, others throw an exception
             if (null == mCursor) {
                 // If the Cursor is empty, the provider found no matches

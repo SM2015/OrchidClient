@@ -233,7 +233,7 @@ public class GetLocationFragment extends Fragment {
 
 
     private neuman.orchidclient.models.Location get_nearest_location(Location gps_location){
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_LOCATION);
+        Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_LOCATION);
         neuman.orchidclient.models.Location closest_orchid_location=null;
 
         // Some providers return null if an error occurs, others throw an exception

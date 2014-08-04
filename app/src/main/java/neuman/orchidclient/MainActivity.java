@@ -553,6 +553,10 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "Sync finished, should refresh nao!!");
+            //refresh the outbox view
+            getFragmentManager().beginTransaction()
+                    .replace(R.id.content_frame, new LocationPickFragment())
+                    .commit();
             if(contentQueryMaker.get_model_count(ObjectTypes.TYPE_USERMESSAGE)>0){
                 launchFragment(new UserMessageDisplayFragment());
             }

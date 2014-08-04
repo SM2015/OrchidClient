@@ -22,6 +22,12 @@ public class Indicator extends Item {
         super(j);
 
     }
+
+    public Indicator(String title){
+        this.setJSON(new JSONObject());
+        this.setTitle(title);
+    }
+
     public JSONArray getFields(){
         return getJSONArray("fields");
     }

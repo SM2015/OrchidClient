@@ -112,7 +112,7 @@ public class UserMessageDisplayFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_USERMESSAGE);
+        Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_USERMESSAGE);
 
         // Some providers return null if an error occurs, others throw an exception
         if (null == mCursor) {
@@ -175,6 +175,8 @@ public class UserMessageDisplayFragment extends Fragment {
         // TODO: Update argument type and name
         public void onFragmentInteraction(Uri uri);
     }
+
+
 
 }
 

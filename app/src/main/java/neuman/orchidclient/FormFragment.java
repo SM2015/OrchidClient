@@ -2,10 +2,12 @@ package neuman.orchidclient;
 //icon from http://raindropmemory.deviantart.com
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -26,9 +28,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.Contract;
@@ -122,7 +122,7 @@ public class FormFragment extends Fragment {
         button_outbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                submitForm(false);
+                attempt_form_submission(false);
             }
         });
 
@@ -130,7 +130,7 @@ public class FormFragment extends Fragment {
         button_draft.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                submitForm(true);
+                attempt_form_submission(true);
             }
         });
 
@@ -255,55 +255,95 @@ public class FormFragment extends Fragment {
         public void onFragmentInteraction(Uri uri);
     }
 
+    private void attempt_form_submission(Boolean draft){
+        //check to see if there are enough records already
+        ArrayList<JSONObject> record_jsons = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_RECORD);
+        Integer same_location_same_indicator_record_count =0;
+        for(JSONObject j :record_jsons){
+            try{
+                if((j.getInt("indicator_id")==incoming_indicator.getInt("id"))&&(j.getInt("location_id")==location_json.getInt("id"))){
+                    same_location_same_indicator_record_count++;
+                }
+            }catch(JSONException e){
+                e.printStackTrace();
+            }
+        }
+        try {
+            Integer max_monthly_records = incoming_indicator.getInt("maximum_monthly_records");
+            if (same_location_same_indicator_record_count > max_monthly_records) {
+                //if there's too many throw an error and break out of this
+                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case DialogInterface.BUTTON_NEUTRAL:
+                                //Yes button clicked
+                                break;
+                        }
+                    }
+                };
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setMessage("You have reached the maximum number of records this month ("+max_monthly_records.toString()+") for this indicator at this location.").setNeutralButton("Ok", dialogClickListener).show();
+            }else{
+                submitForm(draft);
+            }
+        }catch(JSONException e){
+            e.printStackTrace();
+        }
+    }
+
     private void submitForm(Boolean draft){
-        List switch_values = new ArrayList();
+        JSONArray switch_values = new JSONArray();
         Integer visible_checkboxes_checked = 0;
 
         for (Object f : fieldList)
         {
-            if (f instanceof Switch) {
-                Switch old_switch = (Switch) f;
-                Map valueMap = new HashMap();
-                valueMap.put("field_id", (String) old_switch.getTag());
-                if(old_switch.isChecked()){
-                    valueMap.put("value", true);
-                    visible_checkboxes_checked +=1;
-                }
-                else{
-                    valueMap.put("value", false);
-                }
+            try {
+                if (f instanceof Switch) {
+                    Switch old_switch = (Switch) f;
+                    JSONObject valueJSON = new JSONObject();
+                    valueJSON.put("field_id", (String) old_switch.getTag());
+                    if (old_switch.isChecked()) {
+                        valueJSON.put("value", true);
+                        visible_checkboxes_checked += 1;
+                    } else {
+                        valueJSON.put("value", false);
+                    }
 
-                switch_values.add(valueMap);
-            }
-            else if (f instanceof EditText) {
-                EditText old_edit = (EditText) f;
-                Map valueMap = new HashMap();
-                valueMap.put("field_id", (String) old_edit.getTag());
-                valueMap.put("value", old_edit.getText().toString());
-                switch_values.add(valueMap);
+                    switch_values.put(valueJSON);
+                } else if (f instanceof EditText) {
+                    EditText old_edit = (EditText) f;
+                    JSONObject valueJSON = new JSONObject();
+                    valueJSON.put("field_id", (String) old_edit.getTag());
+                    String old_edit_text_value = old_edit.getText().toString();
+                    valueJSON.put("value", old_edit_text_value);
+                    switch_values.put(valueJSON);
+                }
+            }catch(JSONException e){
+                e.printStackTrace();
             }
 
         }
         float score = (visible_checkboxes_checked * 100.0f) / visible_checkboxes;
-        Map outputMap = new HashMap();
-        outputMap.put("values", switch_values);
+        JSONObject outputJSON = new JSONObject();
         try{
+            outputJSON.put("values", switch_values);
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String hostname = settings.getString("example_text", "NO HOSTNAME");
-            outputMap.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_indicator.getInt("id")).toString()+"/record/upload/");
-            outputMap.put("indicator_id", incoming_indicator.getInt("id"));
-            outputMap.put("location_id", location_json.getInt("id"));
-            outputMap.put("score", score);
-            outputMap.put("draft", draft);
-            outputMap.put("title", incoming_indicator.getString("title")+" "+contentQueryMaker.getCurrentTimeStamp());
+            outputJSON.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_indicator.getInt("id")).toString()+"/record/upload/");
+            outputJSON.put("indicator_id", incoming_indicator.getInt("id"));
+            outputJSON.put("location_id", location_json.getInt("id"));
+            outputJSON.put("score", score);
+            outputJSON.put("draft", draft);
+            outputJSON.put("title", "(RECORD) Location: "+location_json.getString("title")+" Indicator: "+incoming_indicator.getString("title")+" Timestamp:"+contentQueryMaker.getCurrentTimeStamp());
             //add the row_id so we can update instead of insert if there was a pre-existing record (aka we are editing)
             if(incoming_record != null){
-                outputMap.put("row_id", (Integer) incoming_record.get("row_id"));
+                outputJSON.put("row_id", (Integer) incoming_record.get("row_id"));
             }
             }catch(JSONException e){
             e.printStackTrace();
         }
-        JSONObject outputJSON = new JSONObject(outputMap);
 
         Log.d("valueJSON", outputJSON.toString());
         save_to_provider(getActivity().getContentResolver().acquireContentProviderClient(Contract.Entry.CONTENT_URI), outputJSON.toString(), ObjectTypes.TYPE_RECORD, -1);

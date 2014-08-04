@@ -1,12 +1,28 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 xmlns:tools="http://schemas.android.com/tools"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
+android:layout_width="fill_parent"
+android:layout_height="fill_parent"
 tools:context="neuman.orchidclient.ScoringFragment">
 
 <!-- TODO: Update blank fragment layout -->
 
-
+    <LinearLayout
+        android:id="@+id/buttons"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_alignParentBottom="true">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/submit_score_internal_name"
+            android:id="@+id/button_submit_score"
+            android:textColor="#ffffff"
+            android:background="#53585f"
+            android:layout_marginRight="@dimen/abc_action_bar_icon_vertical_padding" />
+    </LinearLayout>
 <RelativeLayout
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -18,18 +34,7 @@ tools:context="neuman.orchidclient.ScoringFragment">
         android:layout_gravity="center"
         android:id="@+id/FieldsLinearLayout"
         android:gravity="top">
-        <Button
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left|top"
-            android:text="@string/submit_internal_name"
-            android:id="@+id/button_submit_score"
-            android:background="#53585f"
-            android:textColor="#ffffff"
-            android:layout_marginTop="@dimen/abc_action_bar_icon_vertical_padding"
-            android:paddingTop="@dimen/stripe_button_padding"
-            android:paddingBottom="@dimen/stripe_button_padding"
-            android:textSize="@dimen/abc_action_bar_title_text_size" />
+
 
         <ListView
             android:layout_width="fill_parent"
@@ -42,4 +47,4 @@ tools:context="neuman.orchidclient.ScoringFragment">
 
 
 
-</FrameLayout>
+</RelativeLayout>

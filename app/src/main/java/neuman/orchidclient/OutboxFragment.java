@@ -92,23 +92,40 @@ public class OutboxFragment extends Fragment {
         View inflatedView = inflater.inflate(R.layout.fragment_outbox, container, false);
 
         contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type(ObjectTypes.TYPE_RECORD);
+        //we only care about scores in the non draft outbox
+        if(drafts != true) {
+            //get scores
+            Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_SCORE);
+            // Some providers return null if an error occurs, others throw an exception
+            if (null == mCursor) {
+                // If the Cursor is empty, the provider found no matches
+                Log.d(TAG, "Cursor Error");
+            } else if (mCursor.getCount() < 1) {
+                Log.d(TAG, "No results");
+
+            } else {
+                // Insert code here to do something with the results
+                while (mCursor.moveToNext()) {
+                    String jsonString = mCursor.getString(2);
+                    try {
+                        JSONObject score_json = new JSONObject(jsonString);
+                        score_json.put("row_id", mCursor.getInt(0));
+                        Record newItem = new Record(score_json);
+                        items.add(newItem);
+                    } catch (JSONException e) {
+                        Log.d(TAG, e.toString());
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_RECORD);
         // Some providers return null if an error occurs, others throw an exception
         if (null == mCursor) {
-    /*
-     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
-     * call android.util.Log.e() to log this error.
-     *
-     */
             // If the Cursor is empty, the provider found no matches
             Log.d(TAG, "Cursor Error");
         } else if (mCursor.getCount() < 1) {
-
-    /*
-     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
-     * an error. You may want to offer the user the option to insert a new row, or re-type the
-     * search term.
-     */
             Log.d(TAG,"No results");
 
         } else {

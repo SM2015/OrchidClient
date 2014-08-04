@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import neuman.orchidclient.models.Indicator;
@@ -29,7 +30,7 @@ public class ContentQueryMaker {
 
     }
 
-    public Cursor get_all_of_object_type(Integer object_type){
+    public Cursor get_all_of_object_type_cursor(Integer object_type){
         // A "projection" defines the columns that will be returned for each row
         String[] mProjection =
                 {
@@ -54,6 +55,30 @@ public class ContentQueryMaker {
         return mCursor;
     }
 
+    public ArrayList get_all_of_object_type(Integer object_type){
+        ArrayList<JSONObject> output = new ArrayList<JSONObject>();
+        Cursor mCursor = this.get_all_of_object_type_cursor(object_type);
+        if (null == mCursor) {
+            // If the Cursor is empty, the provider found no matches
+            Log.d(TAG,"Cursor Error");
+        } else if (mCursor.getCount() < 1) {
+            Log.d(TAG,"No results");
+        } else {
+            while (mCursor.moveToNext()) {
+                Log.d(TAG,"*****CURSOR MOVED*****");
+                String jsonString = mCursor.getString(2);
+                try{
+                    JSONObject mJSON = new JSONObject(jsonString);
+                    output.add(mJSON);
+                }catch(JSONException e){
+                    Log.d(TAG, e.toString());
+                    e.printStackTrace();
+                }
+            }
+        }
+        return output;
+    }
+
     public void drop_contentProvider_model(Integer objectType){
         // Defines a string to contain the selection clause
         String mSelectionClause =  Contract.Entry.COLUMN_NAME_OBJECTTYPE+" ="+ objectType;
@@ -64,6 +89,7 @@ public class ContentQueryMaker {
         drop_contentProvider_model(ObjectTypes.TYPE_RECORD);
         drop_contentProvider_model(ObjectTypes.TYPE_INDICATOR);
         drop_contentProvider_model(ObjectTypes.TYPE_LOCATION);
+        drop_contentProvider_model(ObjectTypes.TYPE_SCORE);
     }
 
     public void drop_row(Integer row){
@@ -126,20 +152,9 @@ public class ContentQueryMaker {
 
         Cursor mCursor = make_query(mSelectionClause);
         if (null == mCursor) {
-    /*
-     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
-     * call android.util.Log.e() to log this error.
-     *
-     */
             // If the Cursor is empty, the provider found no matches
             Log.d(TAG,"Cursor Error");
         } else if (mCursor.getCount() < 1) {
-
-    /*
-     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
-     * an error. You may want to offer the user the option to insert a new row, or re-type the
-     * search term.
-     */
             Log.d(TAG,"No results");
 
         } else {
@@ -164,7 +179,6 @@ public class ContentQueryMaker {
                         Location r = new Location(mJSON);
                         return r;
                     }
-
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();
