@@ -163,6 +163,8 @@ public class FormFragment extends Fragment {
                         Log.d(TAG, "IS CHECKBOX");
                         visible_checkboxes +=1;
                         Switch new_switch = new Switch(getActivity());
+                        new_switch.setTextOff("No");
+                        new_switch.setTextOn("Yes");
                         new_switch.setText(visible_fields+". "+label);
                         new_switch.setTag(field_id);
                         if (incoming_record != null) {

@@ -20,30 +20,19 @@ tools:context="neuman.orchidclient.ScoringFragment">
             android:text="@string/submit_score_internal_name"
             android:id="@+id/button_submit_score"
             android:textColor="#ffffff"
-            android:background="#53585f"
-            android:layout_marginRight="@dimen/abc_action_bar_icon_vertical_padding" />
+            android:background="#53585f" />
     </LinearLayout>
-<RelativeLayout
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:layout_gravity="center_horizontal|top">
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_gravity="center"
-        android:id="@+id/FieldsLinearLayout"
-        android:gravity="top">
-
-
+        android:layout_above="@id/buttons">
         <ListView
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="fill_parent"
             android:id="@+id/listView"
             android:layout_gravity="center_horizontal|top" />
-    </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>
 
 
 

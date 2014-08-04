@@ -3,7 +3,7 @@
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:orientation="horizontal" android:layout_width="match_parent"
         android:layout_height="wrap_content"
-    android:minHeight="2dp">
+    android:minHeight="4dp">
 
         <TextView
             android:layout_width="0dp"
@@ -11,8 +11,8 @@
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="Small Text"
             android:id="@+id/titleView"
-            android:gravity="center_horizontal"
-            android:layout_weight="3"/>
+            android:gravity="center_horizontal|left"
+            android:layout_weight="3" />
 
         <TextView
             android:layout_width="0dp"
@@ -20,6 +20,6 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Large Text"
             android:id="@+id/scoreView"
-            android:gravity="center_horizontal"
+            android:gravity="center_vertical|center_horizontal"
             android:layout_weight="1"/>
     </LinearLayout>

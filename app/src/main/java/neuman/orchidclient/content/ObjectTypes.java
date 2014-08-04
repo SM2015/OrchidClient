@@ -14,4 +14,5 @@ public class ObjectTypes {
     public static int[] colors = new int[] { 0x30FFFFFF, 0x30C0C0C0 };
     public static int COLOR_RED = 0x30ff774a;
     public static int COLOR_GREEN = 0x3070bf41;
+    public static int COLOR_YELLOW = 0x30ffff00;
 }

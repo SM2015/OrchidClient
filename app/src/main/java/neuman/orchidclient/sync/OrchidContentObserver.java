@@ -27,7 +27,7 @@ public class OrchidContentObserver extends ContentObserver
     {  super.onChange(selfChange);
 
         //How do I get more info here?????
-        ShowToast("Internal Database Updated");
+        //ShowToast("Internal Database Updated");
     }
 
 
