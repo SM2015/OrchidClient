@@ -155,7 +155,7 @@ public class OutboxFragment extends Fragment {
             button_sync.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    ((MainActivity) getActivity()).attemptSync();
+                    ((MainActivity) getActivity()).check_network_and_sync();
                     FragmentManager fragmentManager = getFragmentManager();
                     fragmentManager.popBackStack();
                 }

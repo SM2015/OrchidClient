@@ -16,10 +16,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.text.TextUtils;
@@ -65,6 +68,7 @@ public class MainActivity extends Activity {
 
     private static final String STATE_DIALOG = "state_dialog";
     private static final String STATE_INVALIDATE = "state_invalidate";
+    private static Integer SPINNER_RESULT_CODE = 0;
 
     private String TAG = this.getClass().getSimpleName();
 
@@ -165,7 +169,7 @@ public class MainActivity extends Activity {
                     Log.d(TAG, "AddNewAccount Bundle is " + bnd);
 
                     autoAuthenticate(AUTHTOKEN_TYPE_FULL_ACCESS, false);
-                    attemptSync();
+                    check_network_and_sync();
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -345,16 +349,45 @@ public class MainActivity extends Activity {
         fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
     }
 
-    public void attemptSync() {
+    public void check_network_and_sync() {
+        if(isNetworkAvailable()!=true){
+            //make sure they are ready to submit
+            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    switch (which) {
+                        case DialogInterface.BUTTON_POSITIVE:
+                            //settings button clicked
+                            Intent i = new Intent(Settings.ACTION_WIRELESS_SETTINGS);
+                            startActivity(i);
+                            break;
+
+                        case DialogInterface.BUTTON_NEGATIVE:
+                            //No button clicked
+                            break;
+                    }
+                }
+            };
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Unable to connect").setPositiveButton("Settings", dialogClickListener)
+                    .setNegativeButton("Cancel", dialogClickListener).show();
+        }else{
+            try_to_sync();
+        }
+
+    }
+
+    private void try_to_sync(){
         Log.d(TAG, "should sync");
         //wipe out all old error messages
         contentQueryMaker.drop_contentProvider_model(ObjectTypes.TYPE_USERMESSAGE);
-            // Pass the settings flags by inserting them in a bundle
-            Bundle settingsBundle = new Bundle();
-            settingsBundle.putBoolean(
-                    ContentResolver.SYNC_EXTRAS_MANUAL, true);
-            settingsBundle.putBoolean(
-                    ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        // Pass the settings flags by inserting them in a bundle
+        Bundle settingsBundle = new Bundle();
+        settingsBundle.putBoolean(
+                ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        settingsBundle.putBoolean(
+                ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
                     /*
                      * Request the sync for the default account, authority, and
                      * manual sync settings
@@ -461,8 +494,7 @@ public class MainActivity extends Activity {
         private Button button_english;
         private Button button_spanish;
         private static int LOGIN_RESULT_CODE = 1;
-        private static int PICKLOCATION_RESULT_CODE = 2;
-        private static int FORM_RESULT_CODE = 3;
+        private static int SPINNER_RESULT_CODE = 2;
 
 
         public PlaceholderFragment() {
@@ -539,32 +571,56 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(syncFinishedReceiver, new IntentFilter(SyncService.SYNC_FINISHED));
+        registerReceiver(syncStartedReceiver, new IntentFilter(SyncService.SYNC_STARTED));
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(syncFinishedReceiver);
+        registerReceiver(syncStartedReceiver, new IntentFilter(SyncService.SYNC_STARTED));
     }
 
-    private BroadcastReceiver syncFinishedReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver syncStartedReceiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "Sync finished, should refresh nao!!");
-            //refresh the outbox view
+            Log.d(TAG, "Sync started");
+            //launch the outbox view to replace the back stack
             getFragmentManager().beginTransaction()
                     .replace(R.id.content_frame, new LocationPickFragment())
                     .commit();
-            if(contentQueryMaker.get_model_count(ObjectTypes.TYPE_USERMESSAGE)>0){
-                launchFragment(new UserMessageDisplayFragment());
-            }
+            Intent i = new Intent(getBaseContext(), SpinnerActivity.class);
+            startActivityForResult(i, SPINNER_RESULT_CODE);
+
+
         }
     };
 
     public void set_action_bar_title(String title){
         getActionBar().setTitle(title);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == SPINNER_RESULT_CODE) {
+            Log.d(TAG, "Spinner finished, should refresh nao!!");
+            //refresh the outbox view
+            getFragmentManager().beginTransaction()
+                    .replace(R.id.content_frame, OutboxFragment.newInstance("OUTBOX"))
+                    .commit();
+            if(contentQueryMaker.get_model_count(ObjectTypes.TYPE_USERMESSAGE)>0){
+                launchFragment(new UserMessageDisplayFragment());
+            }
+        }
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 }
 

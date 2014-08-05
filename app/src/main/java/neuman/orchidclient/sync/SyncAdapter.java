@@ -129,6 +129,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          */
 
         Log.i(TAG, "Beginning network synchronization");
+        Intent y = new Intent(SyncService.SYNC_STARTED);
+        getContext().sendBroadcast(y);
         Log.d(TAG, "account.name: "+account.name);
         Log.d(TAG, "account.type: "+account.type);
         Log.d(TAG, "mAccountManager: "+mAccountManager.toString());
