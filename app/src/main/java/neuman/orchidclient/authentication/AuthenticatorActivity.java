@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import neuman.orchidclient.R;
+import neuman.orchidclient.SettingsActivity;
 
 /**
  * The Authenticator activity.
@@ -73,6 +74,15 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
                 String hostname = settings.getString("example_text", "NO HOSTNAME");
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(hostname));
                 startActivity(browserIntent);
+            }
+        });
+
+        findViewById(R.id.textview_change_settings).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //open settings
+                Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
+                startActivity(intent);
             }
         });
     }
@@ -158,5 +168,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
         setResult(RESULT_OK, intent);
         finish();
     }
+
+
 
 }

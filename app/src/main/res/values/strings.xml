@@ -20,12 +20,13 @@
     <string name="repeat_indicator">Repeat Indicator</string>
     <string name="yes_internal_name">Yes</string>
     <string name="no_internal_name">No</string>
-    <string name="gps_internal_name">USE CURRENT LOCATION</string>
+    <string name="gps_internal_name">PICK LOCATION FROM GPS</string>
     <string name="change_password_internal_name">Change Password</string>
     <string name="forgot_password_internal_name">Forgot Password?</string>
     <string name="submit_internal_name">Submit</string>
     <string name="save_as_draft_internal_name">Save As Draft</string>
     <string name="submit_score_internal_name">Submit Score</string>
     <string name="title_activity_spinner">SpinnerActivity</string>
+    <string name="settings_internal_name">Settings</string>
 
 </resources>

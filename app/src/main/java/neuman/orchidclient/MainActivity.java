@@ -83,6 +83,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
         if (savedInstanceState == null) {
             getFragmentManager().beginTransaction()
                     .add(R.id.content_frame, new LocationPickFragment())
@@ -108,7 +109,7 @@ public class MainActivity extends Activity {
         getContentResolver().registerContentObserver(Contract.Entry.CONTENT_URI, false, contentObserver);
 
 
-        mPlanetTitles = new String[]{"Change User", "Set Location", "Outbox", "Drafts","Open Web App", "Settings"};
+        mPlanetTitles = new String[]{"Log Out", "Set Location", "Outbox", "Drafts","Open Web App", "Settings"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
