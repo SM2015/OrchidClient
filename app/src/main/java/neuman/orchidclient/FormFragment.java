@@ -64,7 +64,6 @@ public class FormFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
 
     private Button button_outbox;
-    private Button button_draft;
 
     /**
      * Use this factory method to create a new instance of
@@ -122,14 +121,7 @@ public class FormFragment extends Fragment {
         button_outbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                attempt_form_submission(false);
-            }
-        });
-
-        button_draft = (Button) inflatedView.findViewById(R.id.button_draft);
-        button_draft.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+                //save this record as a draft for future scoring
                 attempt_form_submission(true);
             }
         });
@@ -338,7 +330,7 @@ public class FormFragment extends Fragment {
             outputJSON.put("location_id", location_json.getInt("id"));
             outputJSON.put("score", score);
             outputJSON.put("draft", draft);
-            outputJSON.put("title", "(RECORD) Location: "+location_json.getString("title")+" Indicator: "+incoming_indicator.getString("title")+" Timestamp:"+contentQueryMaker.getCurrentTimeStamp());
+            outputJSON.put("title", "(RECORD) Location: "+location_json.getString("title")+" Indicator: "+incoming_indicator.getString("title")+" Timestamp:"+contentQueryMaker.getCurrentTimeStamp()+" PERCENT: "+Float.toString(score)+"%");
             //add the row_id so we can update instead of insert if there was a pre-existing record (aka we are editing)
             if(incoming_record != null){
                 outputJSON.put("row_id", (Integer) incoming_record.get("row_id"));

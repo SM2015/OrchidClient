@@ -39,6 +39,7 @@ public class OutboxFragment extends Fragment {
     private String TAG = getClass().getSimpleName();
     private ContentQueryMaker contentQueryMaker;
     private Button button_sync;
+    private Button button_score;
 
 
     private ListView listView;
@@ -46,9 +47,12 @@ public class OutboxFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_DEST = "param1";
+    private static final String ARG_LOCATION = "location_json_string";
 
     // TODO: Rename and change types of parameters
     private Boolean drafts;
+    private String location_json_string;
+    private Location location;
 
     private OnFragmentInteractionListener mListener;
 
@@ -60,11 +64,15 @@ public class OutboxFragment extends Fragment {
      * @return A new instance of fragment OutboxFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static OutboxFragment newInstance(String param1) {
+    public static OutboxFragment newInstance(String param1, String location_json_string) {
         OutboxFragment fragment = new OutboxFragment();
         Bundle args = new Bundle();
         args.putString(ARG_DEST, param1);
         fragment.setArguments(args);
+        if(location_json_string!=null) {
+            args.putString(ARG_LOCATION, location_json_string);
+            fragment.setArguments(args);
+        }
         return fragment;
     }
     public OutboxFragment() {
@@ -80,14 +88,24 @@ public class OutboxFragment extends Fragment {
             }
             else{
                 drafts = false;
+            }
+            if (getArguments().getString(ARG_LOCATION) != null) {
+                try {
 
+                    JSONObject location_json = new JSONObject(getArguments().getString(ARG_LOCATION));
+                    location = new Location(location_json);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
             }
         }
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        //wipe the item list so we don't get doubles
+        items = new ArrayList<Record>();
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_outbox, container, false);
 
@@ -134,10 +152,18 @@ public class OutboxFragment extends Fragment {
                 String jsonString = mCursor.getString(2);
                 try{
                     JSONObject record_json = new JSONObject(jsonString);
-                    if(record_json.getBoolean("draft")==drafts){
-                        record_json.put("row_id", mCursor.getInt(0));
-                        Record newItem = new Record(record_json);
-                        items.add(newItem);}
+                    //only display records that are drafts from this location
+                        if((location!=null)){
+                            if((record_json.getInt("location_id")==location.getId())&&(record_json.getBoolean("draft")==true)){
+                                record_json.put("row_id", mCursor.getInt(0));
+                                Record newItem = new Record(record_json);
+                                items.add(newItem);
+                            }
+                        }else if(record_json.getBoolean("draft")==false){
+                            record_json.put("row_id", mCursor.getInt(0));
+                            Record newItem = new Record(record_json);
+                            items.add(newItem);
+                        }
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();
@@ -145,11 +171,24 @@ public class OutboxFragment extends Fragment {
             }
         }
         button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
+        button_score = (Button) inflatedView.findViewById(R.id.button_score);
         if(drafts){
-            ((MainActivity)getActivity()).set_action_bar_title("Drafts");
+            ((MainActivity)getActivity()).set_action_bar_title("Drafts: "+location.getTitle());
             button_sync.setVisibility(View.GONE);
+            button_score.setVisibility(View.VISIBLE);
+            button_score.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //view_main.setVisibility(View.INVISIBLE);
+                    //view_datepicker.setVisibility(View.VISIBLE);
+                    FragmentManager fragmentManager = getFragmentManager();
+                    fragmentManager.beginTransaction().replace(R.id.content_frame, ScoringFragment.newInstance(location.getJSON().toString())).addToBackStack(null).commit();
+
+                }
+            });
         }else {
-            ((MainActivity)getActivity()).set_action_bar_title("Outbox");
+            ((MainActivity)getActivity()).set_action_bar_title("All Locations Outbox");
+            button_score.setVisibility(View.GONE);
             button_sync.setVisibility(View.VISIBLE);
             button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
             button_sync.setOnClickListener(new View.OnClickListener() {
@@ -176,28 +215,31 @@ public class OutboxFragment extends Fragment {
 
         // Assign adapter to ListView
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapter, View v, int position,
-                                    long arg3) {
+        //only turn on the click function if we are looking at drafts
+        if(drafts==true) {
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapter, View v, int position,
+                                        long arg3) {
 
-                try{
-                    Record item = (Record) adapter.getItemAtPosition(position);
-                    item.setContentQueryMaker(contentQueryMaker);
-                    Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
-                    Log.d(TAG, "Clicked JSON" + item.getJSON().toString());
-                    FragmentManager fragmentManager = getFragmentManager();
-                    Location location = item.getLocation();
-                    String location_json_string = location.getJSON().toString();
-                    String indicator_json_string = item.getIndicator().getJSON().toString();
+                    try {
+                        Record item = (Record) adapter.getItemAtPosition(position);
+                        item.setContentQueryMaker(contentQueryMaker);
+                        Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
+                        Log.d(TAG, "Clicked JSON" + item.getJSON().toString());
+                        FragmentManager fragmentManager = getFragmentManager();
+                        Location location = item.getLocation();
+                        String location_json_string = location.getJSON().toString();
+                        String indicator_json_string = item.getIndicator().getJSON().toString();
 
-                    fragmentManager.beginTransaction().replace(R.id.content_frame, FormFragment.newInstance(location_json_string,indicator_json_string, item.getJSON().toString())).addToBackStack(null).commit();
+                        fragmentManager.beginTransaction().replace(R.id.content_frame, FormFragment.newInstance(location_json_string, indicator_json_string, item.getJSON().toString())).addToBackStack(null).commit();
 
-                }catch(JSONException e){
-                    Log.d(TAG, e.toString());
+                    } catch (JSONException e) {
+                        Log.d(TAG, e.toString());
+                    }
                 }
-            }
-        });
+            });
+        }
 
         return inflatedView;
     }

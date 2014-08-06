@@ -30,7 +30,23 @@
                 android:paddingTop="@dimen/stripe_button_padding"
                 android:paddingBottom="@dimen/stripe_button_padding"
                 android:textSize="@dimen/abc_action_bar_title_text_size" />
-
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/score_internal_name"
+                android:id="@+id/button_score"
+                android:layout_gravity="left|top"
+                android:background="#51a7f9"
+                android:textColor="@android:color/black"
+                android:layout_marginTop="@dimen/abc_action_bar_icon_vertical_padding"
+                android:paddingTop="@dimen/stripe_button_padding"
+                android:paddingBottom="@dimen/stripe_button_padding"
+                android:textSize="@dimen/abc_action_bar_title_text_size" />
+            <ListView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:id="@+id/listView"
+                android:layout_gravity="center_horizontal|top" />
             <ListView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"

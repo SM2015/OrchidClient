@@ -105,7 +105,7 @@ public class MainActivity extends Activity {
         getContentResolver().registerContentObserver(Contract.Entry.CONTENT_URI, false, contentObserver);
 
 
-        mPlanetTitles = new String[]{"Log Out", "Set Location", "Outbox", "Drafts","Open Web App", "Settings"};
+        mPlanetTitles = new String[]{"Log Out", "Set Location", "All Locations Outbox", "Open Web App", "Settings"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
@@ -421,18 +421,16 @@ public class MainActivity extends Activity {
             launchFragment(new LocationPickFragment());
         }  else if (position == 2) {
             clear_backStack();
-            launchFragment(OutboxFragment.newInstance("OUTBOX"));
-        }  else if (position == 3) {
-            clear_backStack();
-            launchFragment(OutboxFragment.newInstance("DRAFTS"));
-        }else if (position == 4) {
+            //launch outbox with no location and dest= OUTBOX
+            launchFragment(OutboxFragment.newInstance("OUTBOX", null));
+        }else if (position == 3) {
             //open in web app
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
             String hostname = settings.getString("example_text", "NO HOSTNAME");
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(hostname));
             startActivity(browserIntent);
 
-        } else if (position == 5) {
+        } else if (position == 4) {
             //open settings
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
@@ -596,7 +594,7 @@ public class MainActivity extends Activity {
             Log.d(TAG, "Spinner finished, should refresh nao!!");
             //refresh the outbox view
             getFragmentManager().beginTransaction()
-                    .replace(R.id.content_frame, OutboxFragment.newInstance("OUTBOX"))
+                    .replace(R.id.content_frame, OutboxFragment.newInstance("OUTBOX", null))
                     .commit();
             if(contentQueryMaker.get_model_count(ObjectTypes.TYPE_USERMESSAGE)>0){
                 launchFragment(new UserMessageDisplayFragment());

@@ -28,5 +28,6 @@
     <string name="submit_score_internal_name">Submit Score</string>
     <string name="title_activity_spinner">SpinnerActivity</string>
     <string name="settings_internal_name">Settings</string>
+    <string name="drafts_button_internal_name">VIEW LOCATION DRAFTS</string>
 
 </resources>

@@ -43,7 +43,7 @@ public class LocationDetailFragment extends Fragment {
     private ContentQueryMaker contentQueryMaker;
     private ListView listView;
     private ArrayList<Item> items = new ArrayList<Item>();
-    private Button button_score;
+    private Button button_drafts;
     private View view_main;
     private View view_datepicker;
 
@@ -93,15 +93,14 @@ public class LocationDetailFragment extends Fragment {
         View inflatedView = inflater.inflate(R.layout.fragment_location_detail, container, false);
         view_main = (View) inflatedView.findViewById(R.id.mainView);
         view_datepicker = (View) inflatedView.findViewById(R.id.datePickerView);
-        button_score = (Button) inflatedView.findViewById(R.id.button_score);
-        button_score.setOnClickListener(new View.OnClickListener() {
+        button_drafts = (Button) inflatedView.findViewById(R.id.button_drafts);
+        button_drafts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //view_main.setVisibility(View.INVISIBLE);
                 //view_datepicker.setVisibility(View.VISIBLE);
                 FragmentManager fragmentManager = getFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.content_frame, ScoringFragment.newInstance(location_json.toString())).addToBackStack(null).commit();
-
+                fragmentManager.beginTransaction().replace(R.id.content_frame, OutboxFragment.newInstance("DRAFTS", location_json.toString())).addToBackStack(null).commit();
             }
         });
         if(items.isEmpty()) {

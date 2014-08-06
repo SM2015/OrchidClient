@@ -3,6 +3,7 @@ package neuman.orchidclient;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -172,11 +173,12 @@ public class ScoringFragment extends Fragment {
                 try{
                     JSONObject record_json = new JSONObject(jsonString);
                     Record record = new Record(record_json);
-                    //ignore any records not from this location
-                    if((record.is_scored()!=true)&&(record_json.getBoolean("draft")==false) && (record_json.getInt("location_id")==location_json.getInt("id"))){
+                    //ignore any records not from this location that are not drafts
+                    if((record.is_scored()!=true)&&(record_json.getBoolean("draft")==true) && (record_json.getInt("location_id")==location_json.getInt("id"))){
                         record_json.put("row_id", recordCursor.getInt(0));
                         //stick this in the json so if we store it back to the db it will remember having been scored already
                         record.put("scored", true);
+                        record.put("draft", false);
                         //add to list for later marking as permanently scored
                         scored_records.add(record);
                         Indicator record_indicator = get_indicator(indicators, record.getIndicatorID());
@@ -332,6 +334,8 @@ public class ScoringFragment extends Fragment {
     }
     private void submit_score(){
         contentQueryMaker.save_to_provider(outgoing_score.toString(), ObjectTypes.TYPE_SCORE,null);
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, OutboxFragment.newInstance("OUTBOX", null)).addToBackStack(null).commit();
     }
 
 
