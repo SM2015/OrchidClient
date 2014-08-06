@@ -355,27 +355,7 @@ public class MainActivity extends Activity {
 
     public void check_network_and_sync() {
         if(isNetworkAvailable()!=true){
-            //make sure they are ready to submit
-            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    switch (which) {
-                        case DialogInterface.BUTTON_POSITIVE:
-                            //settings button clicked
-                            Intent i = new Intent(Settings.ACTION_WIRELESS_SETTINGS);
-                            startActivity(i);
-                            break;
-
-                        case DialogInterface.BUTTON_NEGATIVE:
-                            //No button clicked
-                            break;
-                    }
-                }
-            };
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("Unable to connect").setPositiveButton("Settings", dialogClickListener)
-                    .setNegativeButton("Cancel", dialogClickListener).show();
+            display_network_dialog();
         }else{
             try_to_sync();
         }
@@ -400,8 +380,12 @@ public class MainActivity extends Activity {
     }
 
     private void launchLogin() {
-        getFragmentManager().popBackStack();
-        addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+        if(isNetworkAvailable()!=true){
+            display_network_dialog();
+        }else{
+            getFragmentManager().popBackStack();
+            addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+        }
     }
 
     private void selectItem(int position) {
@@ -625,6 +609,29 @@ public class MainActivity extends Activity {
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    private void display_network_dialog(){
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case DialogInterface.BUTTON_POSITIVE:
+                        //settings button clicked
+                        Intent i = new Intent(Settings.ACTION_WIFI_SETTINGS);
+                        startActivity(i);
+                        break;
+
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        //No button clicked
+                        break;
+                }
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Not connected to network.").setPositiveButton("Select Network", dialogClickListener)
+                .setNegativeButton("Cancel", dialogClickListener).show();
     }
 }
 
