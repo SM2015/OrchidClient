@@ -169,6 +169,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
         finish();
     }
 
+    @Override
+    public void onBackPressed() {
 
-
+    }
 }

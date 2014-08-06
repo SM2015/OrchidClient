@@ -99,11 +99,7 @@ public class MainActivity extends Activity {
         //account stuff
         mAccountManager = AccountManager.get(this);
         contentQueryMaker = new ContentQueryMaker(this.getContentResolver());
-        final Account availableAccounts[] = mAccountManager.getAccountsByType(AccountGeneral.ACCOUNT_TYPE);
 
-        if (availableAccounts.length == 0) {
-            launchLogin();
-        }
         OrchidContentObserver contentObserver = new OrchidContentObserver(new Handler());
         contentObserver.Contexto = this;
         getContentResolver().registerContentObserver(Contract.Entry.CONTENT_URI, false, contentObserver);
@@ -170,7 +166,7 @@ public class MainActivity extends Activity {
                     Log.d(TAG, "AddNewAccount Bundle is " + bnd);
 
                     autoAuthenticate(AUTHTOKEN_TYPE_FULL_ACCESS, false);
-                    check_network_and_sync();
+
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -270,7 +266,14 @@ public class MainActivity extends Activity {
                     final String authtoken = bnd.getString(AccountManager.KEY_AUTHTOKEN);
                     showMessage((authtoken != null) ? "SUCCESS!\ntoken: " + authtoken : "FAIL");
                     Log.d(TAG, "GetToken Bundle is " + bnd);
-                    //mAccountManager.setAuthToken(account_2, authTokenType_2, authtoken);
+                    if(authtoken != null) {
+                        check_network_and_sync();
+                    }else{
+                        final Account availableAccounts[] = mAccountManager.getAccountsByType(AccountGeneral.ACCOUNT_TYPE);
+                        //remove the bad account
+                        mAccountManager.removeAccount(availableAccounts[0], null,null);
+                        addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                     showMessage(e.getMessage());
@@ -397,6 +400,7 @@ public class MainActivity extends Activity {
     }
 
     private void launchLogin() {
+        getFragmentManager().popBackStack();
         addNewAccount(AccountGeneral.ACCOUNT_TYPE, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
     }
 
@@ -511,12 +515,6 @@ public class MainActivity extends Activity {
         }
 
 
-        private void launchLogin() {
-            //Intent myIntent = new Intent(getActivity(), LoginActvity.class);
-            //startActivityForResult(myIntent, LOGIN_RESULT_CODE);
-
-        }
-
         @Override
         public void onActivityResult(int requestCode, int resultCode, Intent data) {
             super.onActivityResult(requestCode, resultCode, data);
@@ -573,6 +571,11 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         registerReceiver(syncStartedReceiver, new IntentFilter(SyncService.SYNC_STARTED));
+        final Account availableAccounts[] = mAccountManager.getAccountsByType(AccountGeneral.ACCOUNT_TYPE);
+
+        if (availableAccounts.length == 0) {
+            launchLogin();
+        }
     }
 
     @Override

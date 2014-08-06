@@ -28,7 +28,8 @@
         <!-- Authenticator related activities and service needs to be declared here in order for the app to recognize them -->
         <activity
             android:name=".authentication.AuthenticatorActivity"
-            android:label="Login" />
+            android:label="Login"
+            android:noHistory="true"/>
         <activity
             android:name=".authentication.SignUpActivity"
             android:label="Signupski" />

@@ -1,6 +1,7 @@
 package neuman.orchidclient.authentication;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.http.AndroidHttpClient;
 import android.preference.PreferenceManager;
@@ -16,6 +17,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import neuman.orchidclient.content.ContentQueryMaker;
+import neuman.orchidclient.sync.SyncService;
 
 /**
  * Handles the comminication with Parse.com
@@ -91,7 +94,15 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
                 responseString = out.toString();
                 Log.d(TAG, responseString);
                 JSONObject meJSON = new JSONObject(responseString);
-                authtoken = meJSON.get("sessionid").toString();
+                if(meJSON.get("status").equals("success")) {
+                    authtoken = meJSON.get("sessionid").toString();
+                }else if(meJSON.get("status").equals("failure")){
+                    JSONArray authErrors = meJSON.getJSONArray("errors");
+                    for(int i=0; i < authErrors.length(); i++) {
+                        String error = (String)authErrors.get(i);
+                        throw new Exception(error);
+                    }
+                }
             } else{
                 //Closes the connection.
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -101,6 +112,7 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
                 Log.d(TAG, responseString);
                 response.getEntity().getContent().close();
                 contentQueryMaker.insert_message(statusLine.getReasonPhrase());
+                broadcast_finished();
                 throw new IOException(statusLine.getReasonPhrase());
             }
 
@@ -128,5 +140,11 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
         int code;
         String error;
     }
+
+    private void broadcast_finished(){
+        Intent i = new Intent(SyncService.SYNC_FINISHED);
+        context.sendBroadcast(i);
+    }
+
 
 }
