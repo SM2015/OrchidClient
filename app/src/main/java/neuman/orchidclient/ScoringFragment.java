@@ -235,7 +235,7 @@ public class ScoringFragment extends Fragment {
 
         for(Indicator i : indicators){
             //we don't want to score indicators with 0 records as 0% so don't score 0 record indicators at all
-            if(i.getTotal_records()>0) {
+
                 Float percentage = i.getPercentage();
                 Boolean is_passing = percentage > i.getPassing_percentage();
                 percent_of_goals_met_indicator.incrementTotal_records();
@@ -256,7 +256,7 @@ public class ScoringFragment extends Fragment {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
+            if(i.getTotal_records()>0) {
                 //Indicator temp_item = new Indicator(percentage.toString()+" | "+i.getTitle());
                 if (is_passing) {
                     i.color = ObjectTypes.COLOR_GREEN;

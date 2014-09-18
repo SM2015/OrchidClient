@@ -20,6 +20,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -154,19 +156,40 @@ public class FormFragment extends Fragment {
                     if (field_type.equals("CHECKBOX")) {
                         Log.d(TAG, "IS CHECKBOX");
                         visible_checkboxes +=1;
-                        Switch new_switch = new Switch(getActivity());
-                        new_switch.setTextOff("No");
-                        new_switch.setTextOn("Yes");
-                        new_switch.setText(visible_fields+". "+label);
-                        new_switch.setTag(field_id);
+                        //layout.addView(getLinearLayout(new_switch, "",ObjectTypes.colors[colorPos]), layoutParams);
+                        RadioGroup new_radioGroup = new RadioGroup(getActivity());
+                        new_radioGroup.setTag(field_id);
+
+                        RadioButton radio_no = new RadioButton(getActivity());
+                        radio_no.setText("No");
+                        new_radioGroup.addView(radio_no);
+
+                        RadioButton radio_na = new RadioButton(getActivity());
+                        radio_na.setText("N/A");
+                        new_radioGroup.addView(radio_na);
+
+
+                        RadioButton radio_yes = new RadioButton(getActivity());
+                        radio_yes.setText("Yes");
+                        new_radioGroup.addView(radio_yes);
+
                         if (incoming_record != null) {
                             Boolean value = (Boolean) incoming_record.getFieldValue(field_id);
-                            if (value.equals(true)) {
-                                new_switch.setChecked(true);
+                            if(value == null){
+                                //this can happen if the value was N/A
+                                radio_na.setChecked(true);
+                            }
+                            else if (value.equals(true)) {
+                                //get the yes button and set it to active
+                                radio_yes.setChecked(true);
+                            }else if(value.equals(false)){
+                                radio_no.setChecked(true);
                             }
                         }
-                        layout.addView(getLinearLayout(new_switch, "",ObjectTypes.colors[colorPos]), layoutParams);
-                        fieldList.add(new_switch);
+
+                        layout.addView(getLinearLayout(new_radioGroup, visible_fields+". "+label,ObjectTypes.colors[colorPos]), layoutParams);
+
+                        fieldList.add(new_radioGroup);
                     } else if (field_type.equals("TEXT")) {
                         Log.d(TAG, "IS TEXT");
                         EditText new_edit = new EditText(getActivity());
@@ -290,6 +313,7 @@ public class FormFragment extends Fragment {
     private void submitForm(Boolean draft){
         JSONArray switch_values = new JSONArray();
         Integer visible_checkboxes_checked = 0;
+        Boolean all_radiobuttons_filled = true;
 
         for (Object f : fieldList)
         {
@@ -306,6 +330,31 @@ public class FormFragment extends Fragment {
                     }
 
                     switch_values.put(valueJSON);
+                }else if (f instanceof RadioGroup) {
+                    RadioGroup old_radioGroup = (RadioGroup) f;
+                    JSONObject valueJSON = new JSONObject();
+                    valueJSON.put("field_id", (String) old_radioGroup.getTag());
+                    //get the checked radio button's index
+                    int radioButtonID = old_radioGroup.getCheckedRadioButtonId();
+                    View radioButton = old_radioGroup.findViewById(radioButtonID);
+                    int checked_radioButton_index = old_radioGroup.indexOfChild(radioButton);
+                    if (checked_radioButton_index==0) {
+                        //this means No
+                        valueJSON.put("value", false);
+                        visible_checkboxes_checked += 1;
+                    } else if (checked_radioButton_index==1){
+                        //this means N/A so do nothing
+
+                    }else if (checked_radioButton_index==2){
+                        //this means yes
+                        valueJSON.put("value", true);
+                    }else{
+                        //make a note that a radiobutton field was skipped
+                        //prevent submission at the end
+                        all_radiobuttons_filled = false;
+                    }
+
+                    switch_values.put(valueJSON);
                 } else if (f instanceof EditText) {
                     EditText old_edit = (EditText) f;
                     JSONObject valueJSON = new JSONObject();
@@ -319,35 +368,43 @@ public class FormFragment extends Fragment {
             }
 
         }
-        float score = (visible_checkboxes_checked * 100.0f) / visible_checkboxes;
-        JSONObject outputJSON = new JSONObject();
-        try{
-            outputJSON.put("values", switch_values);
-            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String hostname = settings.getString("example_text", "NO HOSTNAME");
-            outputJSON.put("outgoing_url", hostname+"/location/"+new Integer(location_json.getInt("id")).toString()+"/indicator/"+new Integer(incoming_indicator.getInt("id")).toString()+"/record/upload/");
-            outputJSON.put("indicator_id", incoming_indicator.getInt("id"));
-            outputJSON.put("location_id", location_json.getInt("id"));
-            outputJSON.put("score", score);
-            outputJSON.put("draft", draft);
-            outputJSON.put("title", "(RECORD) Location: "+location_json.getString("title")+" Indicator: "+incoming_indicator.getString("title")+" Timestamp:"+contentQueryMaker.getCurrentTimeStamp()+" PERCENT: "+Float.toString(score)+"%");
-            //add the row_id so we can update instead of insert if there was a pre-existing record (aka we are editing)
-            if(incoming_record != null){
-                outputJSON.put("row_id", (Integer) incoming_record.get("row_id"));
+        if(all_radiobuttons_filled) {
+            float score = (visible_checkboxes_checked * 100.0f) / visible_checkboxes;
+            JSONObject outputJSON = new JSONObject();
+            try {
+                outputJSON.put("values", switch_values);
+                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                String hostname = settings.getString("example_text", "NO HOSTNAME");
+                outputJSON.put("outgoing_url", hostname + "/location/" + new Integer(location_json.getInt("id")).toString() + "/indicator/" + new Integer(incoming_indicator.getInt("id")).toString() + "/record/upload/");
+                outputJSON.put("indicator_id", incoming_indicator.getInt("id"));
+                outputJSON.put("location_id", location_json.getInt("id"));
+                outputJSON.put("score", score);
+                outputJSON.put("draft", draft);
+                outputJSON.put("title", "(RECORD) Location: " + location_json.getString("title") + " Indicator: " + incoming_indicator.getString("title") + " Timestamp:" + contentQueryMaker.getCurrentTimeStamp() + " PERCENT: " + Float.toString(score) + "%");
+                //add the row_id so we can update instead of insert if there was a pre-existing record (aka we are editing)
+                if (incoming_record != null) {
+                    outputJSON.put("row_id", (Integer) incoming_record.get("row_id"));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-            }catch(JSONException e){
-            e.printStackTrace();
-        }
 
-        Log.d("valueJSON", outputJSON.toString());
-        save_to_provider(getActivity().getContentResolver().acquireContentProviderClient(Contract.Entry.CONTENT_URI), outputJSON.toString(), ObjectTypes.TYPE_RECORD, -1);
-        FragmentManager fragmentManager = getFragmentManager();
-        String destination = "OUTBOX";
-        if(draft){
-            destination = "DRAFTS";
+            Log.d("valueJSON", outputJSON.toString());
+            save_to_provider(getActivity().getContentResolver().acquireContentProviderClient(Contract.Entry.CONTENT_URI), outputJSON.toString(), ObjectTypes.TYPE_RECORD, -1);
+            FragmentManager fragmentManager = getFragmentManager();
+            String destination = "OUTBOX";
+            if (draft) {
+                destination = "DRAFTS";
+            }
+            fragmentManager.beginTransaction().replace(R.id.content_frame, MessageFragment.newInstance(incoming_location_json_string, incoming_indicator_string, Float.toString(score), destination)).addToBackStack(null).commit();
+        }else{
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("Looks like you left a required field blank. Please go back and fill in all fields.").setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    //do things
+                }
+            }).show();
         }
-        fragmentManager.beginTransaction().replace(R.id.content_frame, MessageFragment.newInstance(incoming_location_json_string,incoming_indicator_string,Float.toString(score), destination)).addToBackStack(null).commit();
-
     }
 
     public void save_to_provider(ContentProviderClient provider, String json_string, Integer object_type, Integer model_id){
