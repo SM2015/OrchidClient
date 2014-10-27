@@ -44,6 +44,7 @@ public class LocationDetailFragment extends Fragment {
     private ListView listView;
     private ArrayList<Item> items = new ArrayList<Item>();
     private Button button_drafts;
+    private Button button_visualize;
     private View view_main;
     private View view_datepicker;
 
@@ -101,6 +102,16 @@ public class LocationDetailFragment extends Fragment {
                 //view_datepicker.setVisibility(View.VISIBLE);
                 FragmentManager fragmentManager = getFragmentManager();
                 fragmentManager.beginTransaction().replace(R.id.content_frame, OutboxFragment.newInstance("DRAFTS", location_json.toString())).addToBackStack(null).commit();
+            }
+        });
+        button_visualize = (Button) inflatedView.findViewById(R.id.button_visualize);
+        button_visualize.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //view_main.setVisibility(View.INVISIBLE);
+                //view_datepicker.setVisibility(View.VISIBLE);
+                FragmentManager fragmentManager = getFragmentManager();
+                fragmentManager.beginTransaction().replace(R.id.content_frame, LocationVisualizeFragment.newInstance(location_json_string)).addToBackStack(null).commit();
             }
         });
         if(items.isEmpty()) {

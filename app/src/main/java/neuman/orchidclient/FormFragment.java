@@ -313,6 +313,7 @@ public class FormFragment extends Fragment {
     private void submitForm(Boolean draft){
         JSONArray switch_values = new JSONArray();
         Integer visible_checkboxes_checked = 0;
+        Integer na_count = 0;
         Boolean all_radiobuttons_filled = true;
 
         for (Object f : fieldList)
@@ -343,7 +344,8 @@ public class FormFragment extends Fragment {
                         valueJSON.put("value", false);
                         visible_checkboxes_checked += 1;
                     } else if (checked_radioButton_index==1){
-                        //this means N/A so do nothing
+                        //this means N/A so add one na
+                        na_count+=1;
 
                     }else if (checked_radioButton_index==2){
                         //this means yes
@@ -369,7 +371,7 @@ public class FormFragment extends Fragment {
 
         }
         if(all_radiobuttons_filled) {
-            float score = (visible_checkboxes_checked * 100.0f) / visible_checkboxes;
+            float score = (visible_checkboxes_checked * 100.0f) / (visible_checkboxes - na_count);
             JSONObject outputJSON = new JSONObject();
             try {
                 outputJSON.put("values", switch_values);

@@ -1,0 +1,153 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="../../assets/ico/favicon.ico">
+
+    <title>Quality Improvement Analytics</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/bower_components/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="static/css/highslide.css" />
+
+    <![endif]-->
+</head>
+
+<body>
+<div class="container">
+
+    <div class="row row-offcanvas row-offcanvas-right">
+
+        <div >
+            <div class="row">
+
+                <div id="container" style="min-width: 310px; height: 600px; margin: 0 auto">
+                    <div hidden class="alert alert-danger" role="alert" id="error_message">
+                        <strong>Oh snap!</strong> There was a problem generating your graph.
+                    </div>
+                    <div class="text-center" id="loading_message">
+                        <h3>Generating Graph</h3>
+                        <p>One moment please...</p>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped active"  role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                <span class="sr-only">50% Complete</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="other_charts">
+                </div>
+
+
+
+
+            </div>
+        </div><!--/row-->
+
+    </div><!--/span-->
+</div><!--/span-->
+</div><!--/row-->
+
+<hr>
+</div><!--/.container-->
+
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+
+
+<script src="static/js/jquery-1.7.1.min.js"></script>
+<script src="static/js/demoad.js"></script>
+<script src="static/js/offcanvas.js"></script>
+
+<script src="static/bower_components/highcharts/highcharts.js"></script>
+<script src="static/bower_components/highcharts/modules/data.js"></script>
+<script src="static/bower_components/highcharts/modules/exporting.js"></script>
+
+<!-- Additional files for the Highslide popup effect -->
+<script type="text/javascript" src="static/js/highslide-full.min.js"></script>
+<script type="text/javascript" src="static/js/highslide.config.js" charset="utf-8"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    $(function () {
+        var processed_json = new Array();
+        var month = new Array();
+        month[0] = "January";
+        month[1] = "February";
+        month[2] = "March";
+        month[3] = "April";
+        month[4] = "May";
+        month[5] = "June";
+        month[6] = "July";
+        month[7] = "August";
+        month[8] = "September";
+        month[9] = "October";
+        month[10] = "November";
+        month[11] = "December";
+
+        var data = {"noun": "Belmopan", "series": [{"data": [[1388534400000.0, 78.0, false], [1391212800000.0, 83.0, false], [1393632000000.0, 70.0, false], [1396310400000.0, 80.0, false], [1398902400000.0, 82.0, false], [1401580800000.0, 71.0, false], [1404172800000.0, 90.0, true], [1406851200000.0, 76.0, false], [1409529600000.0, 70.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 74.0, false], [1414800000000.0, 82.0, false]], "name": "Adquate inputs for provision of pre and post natal care services checklikst [GOAL: 85.0%]"}, {"data": [[1388534400000.0, 75.0, false], [1391212800000.0, 79.0, false], [1393632000000.0, 70.0, false], [1396310400000.0, 72.0, false], [1398902400000.0, 81.0, false], [1401580800000.0, 74.0, false], [1404172800000.0, 84.0, false], [1406851200000.0, 90.0, true], [1409529600000.0, 71.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 73.0, false], [1414800000000.0, 70.0, false]], "name": "Infection Control Checklist: Organization  [GOAL: 85.0%]"}, {"data": [[1388534400000.0, 71.0, false], [1391212800000.0, 83.0, false], [1393632000000.0, 80.0, false], [1396310400000.0, 74.0, false], [1398902400000.0, 83.0, false], [1401580800000.0, 82.0, false], [1404172800000.0, 81.0, false], [1406851200000.0, 80.0, false], [1409529600000.0, 77.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 73.0, false], [1414800000000.0, 82.0, false]], "name": "UTERINE INVERSION [GOAL: 85.0%]"}, {"data": [[1388534400000.0, 78.0, false], [1391212800000.0, 77.0, false], [1393632000000.0, 82.0, false], [1396310400000.0, 76.0, false], [1398902400000.0, 70.0, false], [1401580800000.0, 90.0, false], [1404172800000.0, 80.0, false], [1406851200000.0, 84.0, false], [1409529600000.0, 70.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 83.0, false], [1414800000000.0, 79.0, false]], "name": "Complete EONC with emergency obstetric and neonatal care inputs (drugs and equipment) checklist [GOAL: 100.0%]"}, {"data": [[1388534400000.0, 71.0, false], [1391212800000.0, 70.0, false], [1393632000000.0, 88.0, false], [1396310400000.0, 77.0, false], [1398902400000.0, 81.0, false], [1401580800000.0, 71.0, false], [1404172800000.0, 88.0, false], [1406851200000.0, 89.0, false], [1409529600000.0, 79.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 79.0, false], [1414800000000.0, 80.0, false]], "name": "Basic EONC emergency obstetric and neonatal care inputs (drugs and equipment) checklist\t [GOAL: 100.0%]"}, {"data": [[1388534400000.0, 89.0, true], [1391212800000.0, 78.0, false], [1393632000000.0, 75.0, false], [1396310400000.0, 82.0, false], [1398902400000.0, 82.0, false], [1401580800000.0, 83.0, false], [1404172800000.0, 72.0, false], [1406851200000.0, 78.0, false], [1409529600000.0, 70.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 89.0, true], [1414800000000.0, 81.0, false]], "name": "UTERINE RUPTURE [GOAL: 85.0%]"}, {"data": [[1388534400000.0, 79.0, false], [1391212800000.0, 78.0, false], [1393632000000.0, 72.0, false], [1396310400000.0, 85.0, true], [1398902400000.0, 82.0, false], [1401580800000.0, 70.0, false], [1404172800000.0, 80.0, false], [1406851200000.0, 83.0, false], [1409529600000.0, 83.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 77.0, false], [1414800000000.0, 74.0, false]], "name": "Percentage of birth (vaginal or cesarean) who had Active Management of the Third Stage of Labor (AMS [GOAL: 85.0%]"}, {"data": [[1388534400000.0, 82.0, false], [1391212800000.0, 71.0, false], [1393632000000.0, 74.0, false], [1396310400000.0, 86.0, true], [1398902400000.0, 82.0, false], [1401580800000.0, 84.0, false], [1404172800000.0, 71.0, false], [1406851200000.0, 83.0, false], [1409529600000.0, 70.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 71.0, false], [1414800000000.0, 90.0, true]], "name": " Percentage of newborns with immediate care applied as per protocols. [GOAL: 85.0%]"}, {"data": [[1388534400000.0, 88.0, true], [1391212800000.0, 73.0, false], [1393632000000.0, 86.0, true], [1396310400000.0, 77.0, false], [1398902400000.0, 70.0, false], [1401580800000.0, 73.0, false], [1404172800000.0, 72.0, false], [1406851200000.0, 89.0, true], [1409529600000.0, 70.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 80.0, false], [1414800000000.0, 70.0, false]], "name": "Percentage of newborns who received correct routine care according to protocols [GOAL: 85.0%]"}, {"data": [[1388534400000.0, 72.0, false], [1391212800000.0, 77.0, false], [1393632000000.0, 90.0, true], [1396310400000.0, 74.0, false], [1398902400000.0, 87.0, true], [1401580800000.0, 80.0, false], [1404172800000.0, 79.0, false], [1406851200000.0, 72.0, false], [1409529600000.0, 82.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 76.0, false], [1414800000000.0, 79.0, false]], "name": "Percentage of newborns with severe asphyxia at birth managed according to protocol. [GOAL: 85.0%]"}, {"data": [[1388534400000.0, 77.0, false], [1391212800000.0, 86.0, true], [1393632000000.0, 75.0, false], [1396310400000.0, 74.0, false], [1398902400000.0, 86.0, true], [1401580800000.0, 79.0, false], [1404172800000.0, 81.0, false], [1406851200000.0, 78.0, false], [1409529600000.0, 85.0, true], [1409529600000.0, 0.0, false], [1412121600000.0, 73.0, false], [1414800000000.0, 81.0, false]], "name": "Percentage of newborns discharged according to protocol. [GOAL: 85.0%]"}, {"data": [[1388534400000.0, 75.0, false], [1391212800000.0, 89.0, true], [1393632000000.0, 76.0, false], [1396310400000.0, 87.0, true], [1398902400000.0, 87.0, true], [1401580800000.0, 77.0, false], [1404172800000.0, 78.0, false], [1406851200000.0, 87.0, true], [1409529600000.0, 86.0, true], [1409529600000.0, 0.0, false], [1412121600000.0, 79.0, false], [1414800000000.0, 79.0, false]], "name": "% Children 0-23 months with low weight-for-age managed according to norms in basic/complete facility [GOAL: 85.0%]"}, {"data": [[1388534400000.0, 77.0, false], [1391212800000.0, 71.0, false], [1393632000000.0, 83.0, false], [1396310400000.0, 79.0, false], [1398902400000.0, 90.0, true], [1401580800000.0, 76.0, false], [1404172800000.0, 89.0, true], [1406851200000.0, 76.0, false], [1409529600000.0, 79.0, false], [1409529600000.0, 0.0, false], [1412121600000.0, 79.0, false], [1414800000000.0, 89.0, true]], "name": "QI: % of women whose Perinatal Clinical Form (CLAP Form) is accurately completed and interprete [GOAL: 85.0%]"}, {"dashStyle": "longdash", "lineWidth": 6, "data": [[1388534400000.0, 15.384615384615385], [1391212800000.0, 15.384615384615385], [1393632000000.0, 15.384615384615385], [1396310400000.0, 23.076923076923077], [1398902400000.0, 30.76923076923077], [1401580800000.0, 0.0], [1404172800000.0, 15.384615384615385], [1406851200000.0, 23.076923076923077], [1409529600000.0, 15.384615384615385], [1412121600000.0, 7.6923076923076925], [1414800000000.0, 15.384615384615385]], "name": "PERCENT OF GOALS MET"}], "available_verbs": [{"url": "/location/21/detail/", "visible": true, "display_name": "View Location", "condition_name": "public"}, {"url": "/location/21/update/", "visible": true, "display_name": "Update Location", "condition_name": "is_staff"}, {"url": "/location/21/indicator/list/", "visible": true, "display_name": "View This Location's Indicators", "condition_name": "public"}, {"url": "/location/21/image/create/", "visible": true, "display_name": "Add Image To This Location", "condition_name": "is_authenticated"}], "pk": "21", "conditions": ["public", "is_staff", "public", "is_authenticated"], "view": null};
+            console.log(data.series);
+
+            function apply_chart(dom_object, series_data_blob, chart_title, legend_enabled) {
+
+            return    dom_object.highcharts({
+            chart: {
+                type: 'spline'
+            },
+            title: {
+                text: chart_title
+            },
+            subtitle: {
+                text: 'Click legend to select lines.'
+            },
+            xAxis: {
+                type: 'datetime',
+                dateTimeLabelFormats: { // don't display the dummy year
+                    month: '%e. %b',
+                    year: '%b'
+                },
+                title: {
+                    text: 'Date'
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Score (%)'
+                },
+                min: 0,
+                max:100
+            },
+            legend: {
+                enabled: legend_enabled
+            },
+            tooltip: {
+                headerFormat: '<b>{series.name}</b><br>',
+                pointFormat: '{point.x: %b }: {point.y:.2f}%'
+            },
+            series: series_data_blob
+        });
+
+            }
+
+            // draw chart
+            apply_chart($('#container'), data.series, "All Indicators at "+data.noun, true);
+
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>
