@@ -143,20 +143,41 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         contentQueryMaker.drop_contentProvider_model(ObjectTypes.TYPE_LOCATION);
         contentQueryMaker.drop_contentProvider_model(ObjectTypes.TYPE_INDICATOR);
+        contentQueryMaker.drop_contentProvider_model(ObjectTypes.TYPE_VISUALIZATION);
 
+        //pull down list of all relevant locations, parse and store
         String locationJSON = make_authenticated_request(account, hostname+LOCATIONS_URL);
         JSONObject locationObject = new JSONObject();
         JSONArray locationList = new JSONArray();
         try{
-        locationObject = new JSONObject(locationJSON);
-        locationList = locationObject.getJSONArray("locations");
-        for(int i=0; i < locationList.length(); i++){
-            String individual_location_json = locationList.getString(i);
-            Log.d(TAG, "Attempting to insert: "+individual_location_json);
-            JSONObject location_json = new JSONObject(individual_location_json);
-            insert_into_provider(provider,syncResult,individual_location_json, ObjectTypes.TYPE_LOCATION,location_json.getInt("id"));
-            contentQueryMaker.insert_message("Successfully Synchronized Location "+location_json.getString("title"));
-        }
+            locationObject = new JSONObject(locationJSON);
+            locationList = locationObject.getJSONArray("locations");
+            for(int i=0; i < locationList.length(); i++){
+                String individual_location_json = locationList.getString(i);
+                Log.d(TAG, "Attempting to insert: "+individual_location_json);
+                JSONObject location_json = new JSONObject(individual_location_json);
+                insert_into_provider(provider,syncResult,individual_location_json, ObjectTypes.TYPE_LOCATION,location_json.getInt("id"));
+                contentQueryMaker.insert_message("Successfully Synchronized Location "+location_json.getString("title"), TAG+" sync 1");
+
+
+
+            //pull down vis data with a second request
+            String visualizationJSON = make_authenticated_request(account, hostname + "/location/" + new Integer(location_json.getInt("id")).toString() + "/visualize/");
+            JSONObject visualizationObject = new JSONObject();
+            try{
+                visualizationObject = new JSONObject(visualizationJSON);
+                Log.d(TAG, "Attempting to insert: "+visualizationJSON);
+                insert_into_provider(provider,syncResult,visualizationJSON, ObjectTypes.TYPE_VISUALIZATION,location_json.getInt("id"));
+                contentQueryMaker.insert_message("Successfully Synchronized Location Visualization "+visualizationObject.getString("noun_title"), TAG+" sync visualization");
+            }catch(JSONException e){
+                Log.d(TAG, e.toString());
+                e.printStackTrace();
+            }
+
+
+
+
+            }
         }catch(JSONException e){
             Log.d(TAG, e.toString());
             e.printStackTrace();
@@ -173,12 +194,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 Log.d(TAG, "Attempting to insert: "+individual_indicator_json);
                 JSONObject indicator_json = new JSONObject(individual_indicator_json);
                 insert_into_provider(provider,syncResult,individual_indicator_json, ObjectTypes.TYPE_INDICATOR,indicator_json.getInt("id"));
-                contentQueryMaker.insert_message("Successfully Synchronized Indicator "+indicator_json.getString("title"));
+                contentQueryMaker.insert_message("Successfully Synchronized Indicator "+indicator_json.getString("title"), TAG+" sync 2");
             }
         }catch(JSONException e){
             Log.d(TAG, e.toString());
             e.printStackTrace();
-            contentQueryMaker.insert_message(e.toString());
+            contentQueryMaker.insert_message(e.toString(), TAG+" sync 3");
         }
         push_new_scores(getContext().getContentResolver(), account);
         push_new_records(getContext().getContentResolver(),account);
@@ -244,14 +265,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             } else{
                 //Closes the connection.
                 response.getEntity().getContent().close();
-                contentQueryMaker.insert_message(statusLine.getReasonPhrase());
+                contentQueryMaker.insert_message(statusLine.getReasonPhrase(), TAG+" sync 5");
                 throw new IOException(statusLine.getReasonPhrase());
             }
 
         }catch(IOException e){
             Log.d("HTTP exception", e.toString());
             e.printStackTrace();
-            contentQueryMaker.insert_message(e.toString());
+            contentQueryMaker.insert_message(e.toString(), TAG+" sync 6");
         }
         return responseString;
     }
@@ -342,15 +363,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                                 JSONObject response_JSON = new JSONObject(responseString);
                                 if (response_JSON.getString("status").equals("success")) {
                                     contentQueryMaker.drop_row(mCursor.getInt(0));
-                                    contentQueryMaker.insert_message("New Record With ID" + response_JSON.getString("record_id") + "Successfully Synchronized");
+                                    contentQueryMaker.insert_message("New Record With ID" + response_JSON.getString("record_id") + "Successfully Synchronized", TAG+" sync 7");
                                 } else {
-                                    contentQueryMaker.insert_message("Problem Synchronizing Record");
+                                    contentQueryMaker.insert_message("Problem Synchronizing Record", TAG+" sync 7.5");
                                 }
 
                             } else {
                                 //Closes the connection.
                                 response.getEntity().getContent().close();
-                                contentQueryMaker.insert_message(statusLine.getReasonPhrase());
+                                contentQueryMaker.insert_message(statusLine.getReasonPhrase(), TAG+" sync 8");
                                 throw new IOException(statusLine.getReasonPhrase());
                             }
 
@@ -358,14 +379,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         } catch (Exception e) {
                             Log.d("HTTP exception", e.toString());
                             e.printStackTrace();
-                            contentQueryMaker.insert_message(e.toString());
+                            contentQueryMaker.insert_message(e.toString(), TAG+" sync 9");
 
                         }
                     }
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();
-                    contentQueryMaker.insert_message(e.toString());
+                    contentQueryMaker.insert_message(e.toString(), TAG+" sync 10");
                 }
 
             }
@@ -429,55 +450,55 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 try{
                     JSONObject score_data = new JSONObject(jsonString);
                     Score score = new Score(score_data);
-                        String responseString = "no response";
+                    String responseString = "no response";
 
-                        Log.d(TAG, "authtoken: " + authtoken);
-                        try {
+                    Log.d(TAG, "authtoken: " + authtoken);
+                    try {
 
-                            AndroidHttpClient httpclient = AndroidHttpClient.newInstance("Android");
-                            HttpPost request = new HttpPost(score_data.getString("outgoing_url"));
-                            request.setHeader("X_REQUESTED_WITH", "XMLHttpRequest");
-                            String cookiestring = "sessionid=" + authtoken;
-                            Log.d(TAG, "Cookiestring: " + cookiestring);
-                            request.addHeader("Cookie", cookiestring);
-                            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-                            nameValuePairs.add(new BasicNameValuePair("json", jsonString));
+                        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("Android");
+                        HttpPost request = new HttpPost(score_data.getString("outgoing_url"));
+                        request.setHeader("X_REQUESTED_WITH", "XMLHttpRequest");
+                        String cookiestring = "sessionid=" + authtoken;
+                        Log.d(TAG, "Cookiestring: " + cookiestring);
+                        request.addHeader("Cookie", cookiestring);
+                        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+                        nameValuePairs.add(new BasicNameValuePair("json", jsonString));
 
-                            request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-                            HttpResponse response = httpclient.execute(request);
-                            StatusLine statusLine = response.getStatusLine();
-                            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-                                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                                response.getEntity().writeTo(out);
-                                out.close();
-                                responseString = out.toString();
-                                Log.d(TAG, responseString);
-                                JSONObject response_JSON = new JSONObject(responseString);
-                                if (response_JSON.getString("status").equals("success")) {
-                                    contentQueryMaker.drop_row(mCursor.getInt(0));
-                                    contentQueryMaker.insert_message("New Score With ID" + response_JSON.getString("score_id") + "Successfully Synchronized");
-                                } else {
-                                    contentQueryMaker.insert_message("Problem Synchronizing Score");
-                                }
-
+                        request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+                        HttpResponse response = httpclient.execute(request);
+                        StatusLine statusLine = response.getStatusLine();
+                        if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+                            ByteArrayOutputStream out = new ByteArrayOutputStream();
+                            response.getEntity().writeTo(out);
+                            out.close();
+                            responseString = out.toString();
+                            Log.d(TAG, responseString);
+                            JSONObject response_JSON = new JSONObject(responseString);
+                            if (response_JSON.getString("status").equals("success")) {
+                                contentQueryMaker.drop_row(mCursor.getInt(0));
+                                contentQueryMaker.insert_message("New Score With ID" + response_JSON.getString("score_id") + "Successfully Synchronized", TAG+" sync 11");
                             } else {
-                                //Closes the connection.
-                                response.getEntity().getContent().close();
-                                contentQueryMaker.insert_message("HTTP Problem Synchronizing Score: "+statusLine.getReasonPhrase());
-                                throw new IOException(statusLine.getReasonPhrase());
+                                contentQueryMaker.insert_message("Problem Synchronizing Score", TAG+" sync 11.5");
                             }
 
-
-                        } catch (Exception e) {
-                            Log.d("HTTP exception", e.toString());
-                            e.printStackTrace();
-                            contentQueryMaker.insert_message(e.toString());
-
+                        } else {
+                            //Closes the connection.
+                            response.getEntity().getContent().close();
+                            contentQueryMaker.insert_message("HTTP Problem Synchronizing Score: "+statusLine.getReasonPhrase(), TAG+" sync 12");
+                            throw new IOException(statusLine.getReasonPhrase());
                         }
+
+
+                    } catch (Exception e) {
+                        Log.d("HTTP exception", e.toString());
+                        e.printStackTrace();
+                        contentQueryMaker.insert_message(e.toString(), TAG+" sync 13");
+
+                    }
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();
-                    contentQueryMaker.insert_message(e.toString());
+                    contentQueryMaker.insert_message(e.toString(), TAG+" sync 14");
                 }
 
             }

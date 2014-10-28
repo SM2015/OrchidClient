@@ -120,13 +120,14 @@ public class ContentQueryMaker {
         return mCursor;
     }
 
-    public void insert_message(String message){
+    public void insert_message(String message, String breakpoint_tag){
         // Defines an object to contain the new values to insert
         ContentValues mNewValues = new ContentValues();
         JSONObject json = new JSONObject();
         try {
 
             json.put("title", message);
+            json.put("breakpoint", breakpoint_tag);
         }catch(JSONException e){
             Log.d(TAG, e.toString());
             e.printStackTrace();

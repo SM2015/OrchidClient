@@ -3,22 +3,30 @@ package neuman.orchidclient;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
@@ -47,6 +55,7 @@ public class LocationDetailFragment extends Fragment {
     private Button button_visualize;
     private View view_main;
     private View view_datepicker;
+    private ImageView imageButton;
 
     // TODO: Rename and change types of parameters
     private String location_json_string;
@@ -94,6 +103,14 @@ public class LocationDetailFragment extends Fragment {
         View inflatedView = inflater.inflate(R.layout.fragment_location_detail, container, false);
         view_main = (View) inflatedView.findViewById(R.id.mainView);
         view_datepicker = (View) inflatedView.findViewById(R.id.datePickerView);
+        imageButton = (ImageView) inflatedView.findViewById(R.id.imageView);
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dispatchTakePictureIntent();
+            }
+
+        });
         button_drafts = (Button) inflatedView.findViewById(R.id.button_drafts);
         button_drafts.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -232,5 +249,53 @@ public class LocationDetailFragment extends Fragment {
         // TODO: Update argument type and name
         public void onFragmentInteraction(Uri uri);
     }
+
+    String mCurrentPhotoPath;
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = "file:" + image.getAbsolutePath();
+        Log.d(TAG, "mCurrentPhotoPath: "+mCurrentPhotoPath);
+        return image;
+    }
+
+    static final int REQUEST_TAKE_PHOTO = 1;
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException e) {
+                // Error occurred while creating the File
+                Log.d(TAG, "Image save failure!");
+                Log.d(TAG, e.toString());
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri new_image_uri = Uri.fromFile(photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,new_image_uri);
+                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+            }
+        }
+
+
+    }
+
+
 
 }

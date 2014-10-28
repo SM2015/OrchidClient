@@ -277,4 +277,8 @@ public class GetLocationFragment extends Fragment {
         return closest_orchid_location;
     }
 
+    /**
+     * Created by neuman on 10/27/14.
+     */
+
 }

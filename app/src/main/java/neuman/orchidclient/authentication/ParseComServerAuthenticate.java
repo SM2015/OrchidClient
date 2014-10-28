@@ -111,7 +111,7 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
                 responseString = out.toString();
                 Log.d(TAG, responseString);
                 response.getEntity().getContent().close();
-                contentQueryMaker.insert_message(statusLine.getReasonPhrase());
+                contentQueryMaker.insert_message(statusLine.getReasonPhrase(), TAG+" userSignIn 1");
                 broadcast_finished();
                 throw new IOException(statusLine.getReasonPhrase());
             }
@@ -121,7 +121,7 @@ public class ParseComServerAuthenticate implements neuman.orchidclient.authentic
 
         }catch(Exception e){
             Log.d("HTTP exception", e.toString());
-            contentQueryMaker.insert_message(e.toString());
+            contentQueryMaker.insert_message(e.toString(), TAG+" userSignIn 2");
         }
         httpClient = null;
 

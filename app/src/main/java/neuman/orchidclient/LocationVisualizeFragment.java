@@ -38,6 +38,7 @@ public class LocationVisualizeFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String location_json_string;
     private JSONObject location_json;
+    private Integer location_id;
 
     private OnFragmentInteractionListener mListener;
 
@@ -68,6 +69,7 @@ public class LocationVisualizeFragment extends Fragment {
             try{
                 location_json = new JSONObject(location_json_string);
                 ((MainActivity)getActivity()).set_action_bar_title(location_json.get("title").toString()+": Select Indicator");
+                location_id = location_json.getInt("id");
             }catch(JSONException e){
                 Log.d(TAG, e.toString());
             }
@@ -81,6 +83,7 @@ public class LocationVisualizeFragment extends Fragment {
         View inflatedView = inflater.inflate(R.layout.fragment_location_visualize, container, false);
         view_main = (View) inflatedView.findViewById(R.id.mainView);
         view_chart = (WebView) inflatedView.findViewById(R.id.chartView);
+        view_chart.addJavascriptInterface(new JavaScriptInterface(getActivity(),location_id), "Android");
 
         String html = "<html><body>Hello, World!</body></html>";
         String mime = "text/html";
