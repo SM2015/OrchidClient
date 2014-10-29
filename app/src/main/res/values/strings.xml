@@ -30,5 +30,6 @@
     <string name="settings_internal_name">Settings</string>
     <string name="drafts_button_internal_name">VIEW LOCATION DRAFTS</string>
     <string name="button_visualize_local_name">Visualize</string>
+    <string name="title_activity_camera">CameraActivity</string>
 
 </resources>

@@ -12,24 +12,24 @@ import neuman.orchidclient.content.ContentQueryMaker;
 /**
  * Created by neuman on 7/15/14.
  */
-public class Item {
+public class ModelItem {
     private String title = "No Title";
     private JSONObject json;
     protected String TAG = getClass().getSimpleName();
     protected ContentQueryMaker contentQueryMaker;
     public int color = -1;
 
-    public Item(){
+    public ModelItem(){
         this.json = new JSONObject();
 
     }
 
-    public Item(String title){
+    public ModelItem(String title){
         this.title = title;
         this.json = new JSONObject();
     }
 
-    public Item(JSONObject j){
+    public ModelItem(JSONObject j){
         try{
             this.title = j.getString("title");
         }catch(JSONException e){
@@ -39,7 +39,7 @@ public class Item {
         this.json = j;
     }
 
-    public Item(String i, JSONObject j){
+    public ModelItem(String i, JSONObject j){
         this.title = i;
         this.json = j;
     }

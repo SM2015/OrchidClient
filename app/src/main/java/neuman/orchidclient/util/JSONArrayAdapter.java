@@ -11,13 +11,13 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import neuman.orchidclient.content.ObjectTypes;
-import neuman.orchidclient.models.Item;
+import neuman.orchidclient.models.ModelItem;
 
 /**
  * Created by neuman on 7/15/14.
  */
 
-public class JSONArrayAdapter extends ArrayAdapter<Item> {
+public class JSONArrayAdapter extends ArrayAdapter<ModelItem> {
 
     // declaring our ArrayList of items
     protected ArrayList objects;
@@ -55,7 +55,7 @@ public class JSONArrayAdapter extends ArrayAdapter<Item> {
 		 *
 		 * Therefore, i refers to the current Item object.
 		 */
-        Item i = (Item) objects.get(position);
+        ModelItem i = (ModelItem) objects.get(position);
 
         if (i != null) {
 

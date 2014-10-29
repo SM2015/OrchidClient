@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
-import neuman.orchidclient.models.Item;
+import neuman.orchidclient.models.ModelItem;
 import neuman.orchidclient.util.JSONArrayAdapter;
 
 public class UserMessageDisplayFragment extends Fragment {
@@ -30,7 +30,7 @@ public class UserMessageDisplayFragment extends Fragment {
     private static final String ARG_PARAM2 = "param2";
     private ContentQueryMaker contentQueryMaker;
     private ListView listView;
-    private ArrayList<Item> list_text = new ArrayList<Item>();
+    private ArrayList<ModelItem> list_text = new ArrayList<ModelItem>();
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -112,7 +112,7 @@ public class UserMessageDisplayFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_USERMESSAGE);
+        Cursor mCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_USERMESSAGE);
 
         // Some providers return null if an error occurs, others throw an exception
         if (null == mCursor) {
@@ -142,8 +142,8 @@ public class UserMessageDisplayFragment extends Fragment {
                 Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
                 try{
                     JSONObject location_data = new JSONObject(jsonString);
-                    Item newItem = new Item(location_data.get("title").toString(),location_data);
-                    list_text.add(newItem);
+                    ModelItem newModelItem = new ModelItem(location_data.get("title").toString(),location_data);
+                    list_text.add(newModelItem);
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();

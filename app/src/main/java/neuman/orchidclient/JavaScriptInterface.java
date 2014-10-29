@@ -30,7 +30,7 @@ public class JavaScriptInterface {
         contentQueryMaker = new ContentQueryMaker(mContext.getContentResolver());
         //Visualization mVis = (Visualization) contentQueryMaker.get_model(ObjectTypes.TYPE_VISUALIZATION, mLocation_id);
         //vis_data = mVis.getJSON().toString();
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_VISUALIZATION);
+        Cursor mCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_VISUALIZATION);
 
         // Some providers return null if an error occurs, others throw an exception
         if (null == mCursor) {

@@ -7,7 +7,7 @@ import neuman.orchidclient.content.ObjectTypes;
 /**
  * Created by neuman on 7/21/14.
  */
-public class Score extends Item {
+public class Score extends ModelItem {
 
 
     public Score(JSONObject j){

@@ -5,6 +5,8 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -30,7 +32,9 @@ import java.util.Date;
 
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
-import neuman.orchidclient.models.Item;
+import neuman.orchidclient.models.ModelItem;
+import neuman.orchidclient.models.Location;
+import neuman.orchidclient.models.Photo;
 import neuman.orchidclient.util.JSONArrayAdapter;
 
 
@@ -50,7 +54,7 @@ public class LocationDetailFragment extends Fragment {
     private static final String ARG_PARAM1 = "location_json_string";
     private ContentQueryMaker contentQueryMaker;
     private ListView listView;
-    private ArrayList<Item> items = new ArrayList<Item>();
+    private ArrayList<ModelItem> modelItems = new ArrayList<ModelItem>();
     private Button button_drafts;
     private Button button_visualize;
     private View view_main;
@@ -60,6 +64,7 @@ public class LocationDetailFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String location_json_string;
     private JSONObject location_json;
+    private Location location_model;
 
     private OnFragmentInteractionListener mListener;
 
@@ -89,6 +94,8 @@ public class LocationDetailFragment extends Fragment {
             location_json_string = getArguments().getString(ARG_PARAM1);
             try{
                 location_json = new JSONObject(location_json_string);
+                location_model = new Location(location_json);
+                contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
                 ((MainActivity)getActivity()).set_action_bar_title(location_json.get("title").toString()+": Select Indicator");
             }catch(JSONException e){
                 Log.d(TAG, e.toString());
@@ -109,8 +116,18 @@ public class LocationDetailFragment extends Fragment {
             public void onClick(View view) {
                 dispatchTakePictureIntent();
             }
-
         });
+        imageButton.getWidth();
+
+        JSONObject newest_photo_json = contentQueryMaker.get_matching_object(ObjectTypes.TYPE_PHOTO, "location_id", location_model.getId());
+        if(newest_photo_json!=null) {
+            Photo newest_photo = new Photo(newest_photo_json);
+            String path = newest_photo.getPath();
+            File imgFile = new File(path);
+            if (imgFile.exists()) {
+                setFullImageFromFilePath(path, imageButton);
+            }
+        }
         button_drafts = (Button) inflatedView.findViewById(R.id.button_drafts);
         button_drafts.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -131,9 +148,8 @@ public class LocationDetailFragment extends Fragment {
                 fragmentManager.beginTransaction().replace(R.id.content_frame, LocationVisualizeFragment.newInstance(location_json_string)).addToBackStack(null).commit();
             }
         });
-        if(items.isEmpty()) {
-            contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-            Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_INDICATOR);
+        if(modelItems.isEmpty()) {
+            Cursor mCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_INDICATOR);
             // Some providers return null if an error occurs, others throw an exception
             if (null == mCursor) {
                 // If the Cursor is empty, the provider found no matches
@@ -170,8 +186,8 @@ public class LocationDetailFragment extends Fragment {
                         JSONObject indicator_json = new JSONObject(jsonString);
                         //only add the indicator to the list if it exists within the location indicator_ids list
                         if (indicator_ids.contains(indicator_json.getInt("id"))) {
-                            Item newItem = new Item(indicator_json.get("title").toString(), indicator_json);
-                            items.add(newItem);
+                            ModelItem newModelItem = new ModelItem(indicator_json.get("title").toString(), indicator_json);
+                            modelItems.add(newModelItem);
                         }
                     } catch (JSONException e) {
                         Log.d(TAG, e.toString());
@@ -192,7 +208,7 @@ public class LocationDetailFragment extends Fragment {
         // Third parameter - ID of the TextView to which the data is written
         // Forth - the Array of data
 
-        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, items);
+        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, modelItems);
 
         // Assign adapter to ListView
         listView.setAdapter(adapter);
@@ -202,10 +218,10 @@ public class LocationDetailFragment extends Fragment {
                                     long arg3) {
 
                 try{
-                    Item item = (Item) adapter.getItemAtPosition(position);
-                    Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
+                    ModelItem modelItem = (ModelItem) adapter.getItemAtPosition(position);
+                    Log.d(TAG, "Clicked " + modelItem.getJSON().get("title").toString());
                     FragmentManager fragmentManager = getFragmentManager();
-                    fragmentManager.beginTransaction().replace(R.id.content_frame, FormFragment.newInstance(location_json.toString(), item.getJSON().toString(),"")).addToBackStack(null).commit();
+                    fragmentManager.beginTransaction().replace(R.id.content_frame, FormFragment.newInstance(location_json.toString(), modelItem.getJSON().toString(),"")).addToBackStack(null).commit();
 
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
@@ -289,13 +305,41 @@ public class LocationDetailFragment extends Fragment {
             if (photoFile != null) {
                 Uri new_image_uri = Uri.fromFile(photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,new_image_uri);
+                //save to content provider
+
+                Photo new_photo = new Photo("Photo alpha");
+                new_photo.put("path",new_image_uri.getPath());
+                new_photo.put("location_id", location_model.getId());
+                contentQueryMaker.save_to_provider(new_photo.getJSON().toString(),ObjectTypes.TYPE_PHOTO,-1);
+
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+                //
             }
         }
-
-
     }
 
+    private void setFullImageFromFilePath(String imagePath, ImageView imageView) {
+        // Get the dimensions of the View
+        int targetW = imageView.getWidth();
+        int targetH = imageView.getHeight();
 
+        // Get the dimensions of the bitmap
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(imagePath, bmOptions);
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        // Determine how much to scale down the image
+        int scaleFactor = Math.min(photoW/1024, photoH/400);
+
+        // Decode the image file into a Bitmap sized to fill the View
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inPurgeable = true;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(imagePath, bmOptions);
+        imageView.setImageBitmap(bitmap);
+    }
 
 }

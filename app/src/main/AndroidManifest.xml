@@ -29,7 +29,7 @@
         <activity
             android:name=".authentication.AuthenticatorActivity"
             android:label="Login"
-            android:noHistory="true"/>
+            android:noHistory="true" />
         <activity
             android:name=".authentication.SignUpActivity"
             android:label="Signupski" />
@@ -71,6 +71,10 @@ com.example.android.datasync.provider
             android:name=".SpinnerActivity"
             android:label="@string/title_activity_spinner" >
         </activity>
+        <activity
+            android:name=".CameraActivity"
+            android:label="@string/title_activity_camera" >
+        </activity>
     </application>
 
     <!-- To auto-complete the email text field in the login form with the user's emails -->
@@ -88,6 +92,9 @@ com.example.android.datasync.provider
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-feature android:name="android.hardware.camera" android:required="true" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
 
 </manifest>

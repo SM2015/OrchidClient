@@ -30,7 +30,7 @@ public class ContentQueryMaker {
 
     }
 
-    public Cursor get_all_of_object_type_cursor(Integer object_type){
+    public Cursor get_all_of_model_type_cursor(Integer object_type){
         // A "projection" defines the columns that will be returned for each row
         String[] mProjection =
                 {
@@ -57,7 +57,7 @@ public class ContentQueryMaker {
 
     public ArrayList get_all_of_object_type(Integer object_type){
         ArrayList<JSONObject> output = new ArrayList<JSONObject>();
-        Cursor mCursor = this.get_all_of_object_type_cursor(object_type);
+        Cursor mCursor = this.get_all_of_model_type_cursor(object_type);
         if (null == mCursor) {
             // If the Cursor is empty, the provider found no matches
             Log.d(TAG,"Cursor Error");
@@ -184,6 +184,22 @@ public class ContentQueryMaker {
                     Log.d(TAG, e.toString());
                     e.printStackTrace();
                 }
+            }
+        }
+
+        return null;
+    }
+
+    public JSONObject get_matching_object(Integer model_type, String key, Object value){
+
+        ArrayList<JSONObject> photo_jsons = get_all_of_object_type(ObjectTypes.TYPE_PHOTO);
+        for(JSONObject j :photo_jsons){
+            try{
+                if(j.getInt(key)==value){
+                    return j;
+                }
+            }catch(JSONException e){
+                e.printStackTrace();
             }
         }
 

@@ -12,12 +12,12 @@ import java.util.ArrayList;
 import neuman.orchidclient.R;
 import neuman.orchidclient.content.ObjectTypes;
 import neuman.orchidclient.models.Indicator;
-import neuman.orchidclient.models.Item;
+import neuman.orchidclient.models.ModelItem;
 
 /**
  * Created by neuman on 7/31/14.
  */
-public class ScoreArrayAdapter extends ArrayAdapter<Item> {
+public class ScoreArrayAdapter extends ArrayAdapter<ModelItem> {
     // declaring our ArrayList of items
     protected ArrayList objects;
 

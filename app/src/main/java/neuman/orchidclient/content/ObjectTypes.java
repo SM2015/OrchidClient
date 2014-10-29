@@ -11,6 +11,7 @@ public class ObjectTypes {
     public static final Integer TYPE_RECORD = 3;
     public static final Integer TYPE_SCORE = 4;
     public static final Integer TYPE_VISUALIZATION = 5;
+    public static final Integer TYPE_PHOTO = 6;
 
     public static int[] colors = new int[] { 0x30FFFFFF, 0x30C0C0C0 };
     public static int COLOR_RED = 0x30ff774a;

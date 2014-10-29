@@ -13,7 +13,7 @@ import neuman.orchidclient.content.ObjectTypes;
 /**
  * Created by neuman on 7/21/14.
  */
-public class Record extends Item {
+public class Record extends ModelItem {
 
 
     public Record(JSONObject j){

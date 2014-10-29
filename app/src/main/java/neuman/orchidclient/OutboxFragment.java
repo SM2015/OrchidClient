@@ -113,7 +113,7 @@ public class OutboxFragment extends Fragment {
         //we only care about scores in the non draft outbox
         if(drafts != true) {
             //get scores
-            Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_SCORE);
+            Cursor mCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_SCORE);
             // Some providers return null if an error occurs, others throw an exception
             if (null == mCursor) {
                 // If the Cursor is empty, the provider found no matches
@@ -138,7 +138,7 @@ public class OutboxFragment extends Fragment {
             }
         }
 
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_RECORD);
+        Cursor mCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_RECORD);
         // Some providers return null if an error occurs, others throw an exception
         if (null == mCursor) {
             // If the Cursor is empty, the provider found no matches

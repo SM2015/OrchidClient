@@ -127,7 +127,7 @@ public class ScoringFragment extends Fragment {
 
         ArrayList<Integer> checkbox_field_ids = new ArrayList<Integer>();
         indicators = new ArrayList<Indicator>();
-        Cursor indicatorCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_INDICATOR);
+        Cursor indicatorCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_INDICATOR);
         // Some providers return null if an error occurs, others throw an exception
         if (null == indicatorCursor) {
             // If the Cursor is empty, the provider found no matches
@@ -158,7 +158,7 @@ public class ScoringFragment extends Fragment {
         }
         scored_records = new ArrayList<Record>();
         //get first n record for the indicator in order of date input
-        Cursor recordCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_RECORD);
+        Cursor recordCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_RECORD);
         // Some providers return null if an error occurs, others throw an exception
         if (null == recordCursor) {
             // If the Cursor is empty, the provider found no matches

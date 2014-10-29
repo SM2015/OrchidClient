@@ -11,7 +11,7 @@ import neuman.orchidclient.content.ObjectTypes;
 /**
  * Created by neuman on 7/21/14.
  */
-public class Indicator extends Item {
+public class Indicator extends ModelItem {
 
     //these are used in the scoring process
     private Integer total_records = 0;

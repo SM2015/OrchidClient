@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
-import neuman.orchidclient.models.Item;
+import neuman.orchidclient.models.ModelItem;
 import neuman.orchidclient.util.JSONArrayAdapter;
 
 
@@ -43,7 +43,7 @@ public class LocationPickFragment extends Fragment {
     private static final String ARG_PARAM2 = "param2";
     private ContentQueryMaker contentQueryMaker;
     private ListView listView;
-    private ArrayList<Item> itemArrayList = new ArrayList<Item>();
+    private ArrayList<ModelItem> modelItemArrayList = new ArrayList<ModelItem>();
     private Button button_gps;
 
     // TODO: Rename and change types of parameters
@@ -109,7 +109,7 @@ public class LocationPickFragment extends Fragment {
 
 
 
-        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, itemArrayList);
+        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, modelItemArrayList);
 
         // Assign adapter to ListView
         listView.setAdapter(adapter);
@@ -119,10 +119,10 @@ public class LocationPickFragment extends Fragment {
                                     long arg3) {
 
                 try{
-                    Item item = (Item) adapter.getItemAtPosition(position);
-                    Log.d(TAG, "Clicked " + item.getJSON().get("title").toString());
+                    ModelItem modelItem = (ModelItem) adapter.getItemAtPosition(position);
+                    Log.d(TAG, "Clicked " + modelItem.getJSON().get("title").toString());
                     FragmentManager fragmentManager = getFragmentManager();
-                    fragmentManager.beginTransaction().replace(R.id.content_frame, LocationDetailFragment.newInstance(item.getJSON().toString())).addToBackStack(null).commit();
+                    fragmentManager.beginTransaction().replace(R.id.content_frame, LocationDetailFragment.newInstance(modelItem.getJSON().toString())).addToBackStack(null).commit();
 
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
@@ -145,7 +145,7 @@ public class LocationPickFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
-        Cursor mCursor = contentQueryMaker.get_all_of_object_type_cursor(ObjectTypes.TYPE_LOCATION);
+        Cursor mCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_LOCATION);
 
         // Some providers return null if an error occurs, others throw an exception
         if (null == mCursor) {
@@ -175,8 +175,8 @@ public class LocationPickFragment extends Fragment {
                 Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
                 try{
                     JSONObject location_data = new JSONObject(jsonString);
-                    Item newItem = new Item(location_data.get("title").toString(),location_data);
-                    itemArrayList.add(newItem);
+                    ModelItem newModelItem = new ModelItem(location_data.get("title").toString(),location_data);
+                    modelItemArrayList.add(newModelItem);
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();
