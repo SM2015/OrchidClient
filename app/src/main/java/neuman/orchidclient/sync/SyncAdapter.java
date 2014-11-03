@@ -616,7 +616,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                             Log.d(TAG+" photo 10.5", responseString);
                             JSONObject response_JSON = new JSONObject(responseString);
                             if (response_JSON.getString("status").equals("success")) {
-                                //contentQueryMaker.drop_row(mCursor.getInt(0));
+                                contentQueryMaker.drop_row(mCursor.getInt(0));
                                 contentQueryMaker.insert_message("New Photo With ID: " + response_JSON.getString("image_id") + "Successfully Synchronized", TAG+" photo 11");
                             } else {
                                 contentQueryMaker.insert_message("Problem Synchronizing Photo", TAG+" photo 11.5");

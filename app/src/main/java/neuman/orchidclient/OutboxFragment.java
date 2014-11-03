@@ -323,6 +323,11 @@ public class OutboxFragment extends Fragment {
                             photoItems.add(newItem);
                         }
                     }
+                    else{
+                        photo_json.put("row_id", mCursor.getInt(0));
+                        Photo newItem = new Photo(photo_json);
+                        photoItems.add(newItem);
+                    }
                 }catch(JSONException e){
                     Log.d(TAG, e.toString());
                     e.printStackTrace();

@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -34,8 +35,8 @@ import java.util.Date;
 
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
-import neuman.orchidclient.models.ModelItem;
 import neuman.orchidclient.models.Location;
+import neuman.orchidclient.models.ModelItem;
 import neuman.orchidclient.models.Photo;
 import neuman.orchidclient.util.JSONArrayAdapter;
 
@@ -129,6 +130,9 @@ public class LocationDetailFragment extends Fragment {
             if (imgFile.exists()) {
                 setFullImageFromFilePath(path, imageButton);
             }
+        }else{
+            Drawable myDrawable = getResources().getDrawable(R.drawable.camera_smooth);
+            imageButton.setImageDrawable(myDrawable);
         }
         button_drafts = (Button) inflatedView.findViewById(R.id.button_drafts);
         button_drafts.setOnClickListener(new View.OnClickListener() {
