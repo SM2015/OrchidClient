@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -306,10 +308,15 @@ public class LocationDetailFragment extends Fragment {
                 Uri new_image_uri = Uri.fromFile(photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,new_image_uri);
                 //save to content provider
-
+                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                String hostname = settings.getString("example_text", "NO HOSTNAME");
                 Photo new_photo = new Photo("Photo alpha");
                 new_photo.put("path",new_image_uri.getPath());
+                SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy, hh:mm aaa");
+                Date dt = new Date();
+                new_photo.put("title","Photo "+sdf.format(dt).toString());
                 new_photo.put("location_id", location_model.getId());
+                new_photo.put("outgoing_url", hostname + "/location/" + new Integer(location_model.getId()).toString() + "/image/create/");
                 contentQueryMaker.save_to_provider(new_photo.getJSON().toString(),ObjectTypes.TYPE_PHOTO,-1);
 
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);

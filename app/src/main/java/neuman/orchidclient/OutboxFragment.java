@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import neuman.orchidclient.content.ContentQueryMaker;
 import neuman.orchidclient.content.ObjectTypes;
 import neuman.orchidclient.models.Location;
+import neuman.orchidclient.models.Photo;
 import neuman.orchidclient.models.Record;
 import neuman.orchidclient.util.JSONArrayAdapter;
 
@@ -42,8 +43,10 @@ public class OutboxFragment extends Fragment {
     private Button button_score;
 
 
-    private ListView listView;
-    private ArrayList<Record> items = new ArrayList<Record>();
+    private ListView recordListView;
+    private ListView photoListView;
+    private ArrayList<Record> recordItems = new ArrayList<Record>();
+    private ArrayList<Photo> photoItems = new ArrayList<Photo>();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_DEST = "param1";
@@ -105,7 +108,8 @@ public class OutboxFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         //wipe the item list so we don't get doubles
-        items = new ArrayList<Record>();
+        recordItems = new ArrayList<Record>();
+        photoItems = new ArrayList<Photo>();
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_outbox, container, false);
 
@@ -129,7 +133,7 @@ public class OutboxFragment extends Fragment {
                         JSONObject score_json = new JSONObject(jsonString);
                         score_json.put("row_id", mCursor.getInt(0));
                         Record newItem = new Record(score_json);
-                        items.add(newItem);
+                        recordItems.add(newItem);
                     } catch (JSONException e) {
                         Log.d(TAG, e.toString());
                         e.printStackTrace();
@@ -138,38 +142,12 @@ public class OutboxFragment extends Fragment {
             }
         }
 
-        Cursor mCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_RECORD);
-        // Some providers return null if an error occurs, others throw an exception
-        if (null == mCursor) {
-            // If the Cursor is empty, the provider found no matches
-            Log.d(TAG, "Cursor Error");
-        } else if (mCursor.getCount() < 1) {
-            Log.d(TAG,"No results");
+        //GET AND SET ALL RECORDS TO LIST
+        get_and_set_records();
+        get_and_set_photos();
 
-        } else {
-            // Insert code here to do something with the results
-            while (mCursor.moveToNext()) {
-                String jsonString = mCursor.getString(2);
-                try{
-                    JSONObject record_json = new JSONObject(jsonString);
-                    //only display records that are drafts from this location
-                        if((location!=null)){
-                            if((record_json.getInt("location_id")==location.getId())&&(record_json.getBoolean("draft")==true)){
-                                record_json.put("row_id", mCursor.getInt(0));
-                                Record newItem = new Record(record_json);
-                                items.add(newItem);
-                            }
-                        }else if(record_json.getBoolean("draft")==false){
-                            record_json.put("row_id", mCursor.getInt(0));
-                            Record newItem = new Record(record_json);
-                            items.add(newItem);
-                        }
-                }catch(JSONException e){
-                    Log.d(TAG, e.toString());
-                    e.printStackTrace();
-                }
-            }
-        }
+        //GET AND SET ALL PHOTOS TO LIST
+
         button_sync = (Button) inflatedView.findViewById(R.id.button_sync);
         button_score = (Button) inflatedView.findViewById(R.id.button_score);
         if(drafts){
@@ -201,7 +179,8 @@ public class OutboxFragment extends Fragment {
             });
         }
 
-        listView = (ListView) inflatedView.findViewById(R.id.listView);
+        recordListView = (ListView) inflatedView.findViewById(R.id.recordListView);
+        photoListView = (ListView) inflatedView.findViewById(R.id.photoListView);
 
         // Define a new Adapter
         // First parameter - Context
@@ -211,13 +190,14 @@ public class OutboxFragment extends Fragment {
 
 
 
-        JSONArrayAdapter adapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, items);
+        JSONArrayAdapter recordAdapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, recordItems);
+        JSONArrayAdapter photoAdapter = new JSONArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, photoItems);
 
         // Assign adapter to ListView
-        listView.setAdapter(adapter);
+        recordListView.setAdapter(recordAdapter);
         //only turn on the click function if we are looking at drafts
         if(drafts==true) {
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            recordListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> adapter, View v, int position,
                                         long arg3) {
@@ -240,6 +220,9 @@ public class OutboxFragment extends Fragment {
                 }
             });
         }
+
+        // Assign adapter to ListView
+        photoListView.setAdapter(photoAdapter);
 
         return inflatedView;
     }
@@ -276,6 +259,76 @@ public class OutboxFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         public void onFragmentInteraction(Uri uri);
+    }
+
+    private void get_and_set_records(){
+
+        //GET AND SET ALL RECORDS TO LIST
+        Cursor mCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_RECORD);
+        // Some providers return null if an error occurs, others throw an exception
+        if (null == mCursor) {
+            // If the Cursor is empty, the provider found no matches
+            Log.d(TAG, "Cursor Error");
+        } else if (mCursor.getCount() < 1) {
+            Log.d(TAG,"No results");
+
+        } else {
+            // Insert code here to do something with the results
+            while (mCursor.moveToNext()) {
+                String jsonString = mCursor.getString(2);
+                try{
+                    JSONObject record_json = new JSONObject(jsonString);
+                    //only display records that are drafts from this location
+                    if((location!=null)){
+                        if((record_json.getInt("location_id")==location.getId())&&(record_json.getBoolean("draft")==true)){
+                            record_json.put("row_id", mCursor.getInt(0));
+                            Record newItem = new Record(record_json);
+                            recordItems.add(newItem);
+                        }
+                    }else if(record_json.getBoolean("draft")==false){
+                        record_json.put("row_id", mCursor.getInt(0));
+                        Record newItem = new Record(record_json);
+                        recordItems.add(newItem);
+                    }
+                }catch(JSONException e){
+                    Log.d(TAG, e.toString());
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void get_and_set_photos(){
+
+        //GET AND SET ALL RECORDS TO LIST
+        Cursor mCursor = contentQueryMaker.get_all_of_model_type_cursor(ObjectTypes.TYPE_PHOTO);
+        // Some providers return null if an error occurs, others throw an exception
+        if (null == mCursor) {
+            // If the Cursor is empty, the provider found no matches
+            Log.d(TAG, "Cursor Error");
+        } else if (mCursor.getCount() < 1) {
+            Log.d(TAG,"No results");
+
+        } else {
+            // Insert code here to do something with the results
+            while (mCursor.moveToNext()) {
+                String jsonString = mCursor.getString(2);
+                try{
+                    JSONObject photo_json = new JSONObject(jsonString);
+                    //only display records that are drafts from this location
+                    if((location!=null)){
+                        if(photo_json.getInt("location_id")==location.getId()){
+                            photo_json.put("row_id", mCursor.getInt(0));
+                            Photo newItem = new Photo(photo_json);
+                            photoItems.add(newItem);
+                        }
+                    }
+                }catch(JSONException e){
+                    Log.d(TAG, e.toString());
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
 

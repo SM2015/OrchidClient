@@ -25,12 +25,17 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -203,6 +208,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
         push_new_scores(getContext().getContentResolver(), account);
         push_new_records(getContext().getContentResolver(),account);
+        push_new_photos(getContext().getContentResolver(),account);
 
         Log.i(TAG, "Network synchronization complete");
 
@@ -276,6 +282,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
         return responseString;
     }
+
 
     private void push_new_records(ContentResolver contentResolver, Account account){
         String authtoken = mAccountManager.peekAuthToken(account, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
@@ -507,5 +514,138 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.d(TAG, "New Record Push Done");
     }
 
+
+    private void push_new_photos(ContentResolver contentResolver, Account account){
+        String authtoken = mAccountManager.peekAuthToken(account, AccountGeneral.AUTHTOKEN_TYPE_FULL_ACCESS);
+        Log.d(TAG, "Preparing to Push New Records");
+        // A "projection" defines the columns that will be returned for each row
+        String[] mProjection =
+                {
+                        Contract.Entry._ID,    // Contract class constant for the _ID column name
+                        Contract.Entry.COLUMN_NAME_OBJECTTYPE,
+                        Contract.Entry.COLUMN_NAME_JSON,   // Contract class constant for the word column name
+                };
+
+        // Defines a string to contain the selection clause
+        String mSelectionClause =  Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+ ObjectTypes.TYPE_PHOTO;
+
+        // Does a query against the table and returns a Cursor object
+
+        Log.d(TAG, Contract.Entry.CONTENT_URI.toString());
+        Log.d(TAG,"mProjection: "+mProjection.toString());
+        Cursor mCursor = contentResolver.query(
+                Contract.Entry.CONTENT_URI,  // The content URI of the words table
+                mProjection,                       // The columns to return for each row
+                mSelectionClause,                   // Either null, or the word the user entered
+                null,                    // Either empty, or the string the user entered
+                Contract.Entry.COLUMN_NAME_OBJECTTYPE);                       // The sort order for the returned rows
+
+        // Some providers return null if an error occurs, others throw an exception
+        if (null == mCursor) {
+    /*
+     * Insert code here to handle the error. Be sure not to use the cursor! You may want to
+     * call android.util.Log.e() to log this error.
+     *
+     */
+            // If the Cursor is empty, the provider found no matches
+            Log.d(TAG,"Cursor Error");
+        } else if (mCursor.getCount() < 1) {
+
+    /*
+     * Insert code here to notify the user that the search was unsuccessful. This isn't necessarily
+     * an error. You may want to offer the user the option to insert a new row, or re-type the
+     * search term.
+     */
+            Log.d(TAG,"No new photos to push");
+
+        } else {
+            Log.d(TAG, "New photos to push");
+            // Insert code here to do something with the results
+            while (mCursor.moveToNext()) {
+                Log.d(TAG,"*****CURSOR MOVED*****");
+                Log.d(TAG, mCursor.getColumnName(0)+": "+mCursor.getString(0));
+                Log.d(TAG, mCursor.getColumnName(1)+": "+mCursor.getString(1));
+                String jsonString = mCursor.getString(2);
+                Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
+                try{
+                    JSONObject photo_data = new JSONObject(jsonString);
+                    Score score = new Score(photo_data);
+                    String responseString = "no response";
+
+                    Log.d(TAG, "authtoken: " + authtoken);
+                    try {
+
+                        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("Android");
+                        HttpPost request = new HttpPost(photo_data.getString("outgoing_url"));
+                        request.setHeader("X_REQUESTED_WITH", "XMLHttpRequest");
+                        String cookiestring = "sessionid=" + authtoken;
+                        Log.d(TAG, "Cookiestring: " + cookiestring);
+                        request.addHeader("Cookie", cookiestring);
+
+
+
+                        File imgFile = new File(photo_data.getString("path"));
+                        if (imgFile.exists()) {
+
+
+                        //Image attaching
+                        Log.d(TAG, "Multipart entity 1");
+                        MultipartEntityBuilder multipartEntity = MultipartEntityBuilder.create();
+                            Log.d(TAG, "Multipart entity 2");
+                            multipartEntity.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+                        multipartEntity.addBinaryBody("original_file", imgFile, ContentType.create("image/jpeg"), imgFile.getName());
+                            Log.d(TAG, "Multipart entity 3");
+                        //Json string attaching
+                        multipartEntity.addPart("original_file", new StringBody(photo_data.toString(), ContentType.TEXT_PLAIN));
+                            Log.d(TAG, "Multipart entity 4");
+                            request.setEntity(multipartEntity.build());
+                            Log.d(TAG, "Multipart entity 5");
+                        }
+
+                        Log.d(TAG, "Multipart entity 6");
+                        HttpResponse response = httpclient.execute(request);
+                        Log.d(TAG, "Multipart entity 7");
+                        StatusLine statusLine = response.getStatusLine();
+                        Log.d(TAG, "Multipart entity 8");
+
+                        if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+                            ByteArrayOutputStream out = new ByteArrayOutputStream();
+                            response.getEntity().writeTo(out);
+                            out.close();
+                            responseString = out.toString();
+                            Log.d(TAG+" photo 10.5", responseString);
+                            JSONObject response_JSON = new JSONObject(responseString);
+                            if (response_JSON.getString("status").equals("success")) {
+                                //contentQueryMaker.drop_row(mCursor.getInt(0));
+                                contentQueryMaker.insert_message("New Photo With ID: " + response_JSON.getString("image_id") + "Successfully Synchronized", TAG+" photo 11");
+                            } else {
+                                contentQueryMaker.insert_message("Problem Synchronizing Photo", TAG+" photo 11.5");
+                            }
+
+                        } else {
+                            //Closes the connection.
+                            response.getEntity().getContent().close();
+                            contentQueryMaker.insert_message("HTTP Problem Synchronizing Photo: "+statusLine.getReasonPhrase(), TAG+" photo 12");
+                            throw new IOException(statusLine.getReasonPhrase());
+                        }
+
+
+                    } catch (Exception e) {
+                        Log.d("HTTP exception", e.getMessage().toString());
+                        e.printStackTrace();
+                        contentQueryMaker.insert_message(e.getMessage().toString(), TAG+" sync 13");
+
+                    }
+                }catch(JSONException e){
+                    Log.d(TAG, e.toString());
+                    e.printStackTrace();
+                    contentQueryMaker.insert_message(e.toString(), TAG+" sync 14");
+                }
+
+            }
+        }
+
+        Log.d(TAG, "New Record Push Done");
+    }
 
 }
