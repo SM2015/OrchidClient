@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">OrchidClient</string>
+    <string name="app_name">Quality Improvement Analytics</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="english_button_text">English</string>
@@ -31,5 +31,6 @@
     <string name="drafts_button_internal_name">VIEW LOCATION DRAFTS</string>
     <string name="button_visualize_local_name">Visualize</string>
     <string name="title_activity_camera">CameraActivity</string>
+    <string name="internal_take_photo">Take Photo</string>
 
 </resources>

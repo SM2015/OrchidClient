@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -60,9 +59,9 @@ public class LocationDetailFragment extends Fragment {
     private ArrayList<ModelItem> modelItems = new ArrayList<ModelItem>();
     private Button button_drafts;
     private Button button_visualize;
+    private Button button_photo;
     private View view_main;
     private View view_datepicker;
-    private ImageView imageButton;
 
     // TODO: Rename and change types of parameters
     private String location_json_string;
@@ -113,27 +112,14 @@ public class LocationDetailFragment extends Fragment {
         View inflatedView = inflater.inflate(R.layout.fragment_location_detail, container, false);
         view_main = (View) inflatedView.findViewById(R.id.mainView);
         view_datepicker = (View) inflatedView.findViewById(R.id.datePickerView);
-        imageButton = (ImageView) inflatedView.findViewById(R.id.imageView);
-        imageButton.setOnClickListener(new View.OnClickListener() {
+        button_photo = (Button) inflatedView.findViewById(R.id.button_take_photo);
+        button_photo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 dispatchTakePictureIntent();
             }
         });
-        imageButton.getWidth();
 
-        JSONObject newest_photo_json = contentQueryMaker.get_matching_object(ObjectTypes.TYPE_PHOTO, "location_id", location_model.getId());
-        if(newest_photo_json!=null) {
-            Photo newest_photo = new Photo(newest_photo_json);
-            String path = newest_photo.getPath();
-            File imgFile = new File(path);
-            if (imgFile.exists()) {
-                setFullImageFromFilePath(path, imageButton);
-            }
-        }else{
-            Drawable myDrawable = getResources().getDrawable(R.drawable.camera_smooth);
-            imageButton.setImageDrawable(myDrawable);
-        }
         button_drafts = (Button) inflatedView.findViewById(R.id.button_drafts);
         button_drafts.setOnClickListener(new View.OnClickListener() {
             @Override
