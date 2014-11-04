@@ -3,6 +3,7 @@ package neuman.orchidclient;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.ContentProviderClient;
@@ -18,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -30,6 +32,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import neuman.orchidclient.content.ContentQueryMaker;
@@ -63,6 +66,8 @@ public class FormFragment extends Fragment {
     private JSONObject location_json;
     private List fieldList;
     private Integer visible_checkboxes = 0;
+    private Integer selected_month = new Date().getMonth();
+    private Integer selected_year = new Date().getYear();
     private OnFragmentInteractionListener mListener;
 
     private Button button_outbox;
@@ -221,7 +226,7 @@ public class FormFragment extends Fragment {
         }
 
 
-
+        createDialogWithoutDateField().show();
         return inflatedView;
     }
 
@@ -382,6 +387,8 @@ public class FormFragment extends Fragment {
                 outputJSON.put("location_id", location_json.getInt("id"));
                 outputJSON.put("score", score);
                 outputJSON.put("draft", draft);
+                outputJSON.put("year", selected_year);
+                outputJSON.put("month", selected_month);
                 outputJSON.put("title", "(RECORD) Location: " + location_json.getString("title") + " Indicator: " + incoming_indicator.getString("title") + " Timestamp:" + contentQueryMaker.getCurrentTimeStamp() + " PERCENT: " + Float.toString(score) + "%");
                 //add the row_id so we can update instead of insert if there was a pre-existing record (aka we are editing)
                 if (incoming_record != null) {
@@ -457,5 +464,79 @@ public class FormFragment extends Fragment {
             return;
         }
     }
+
+    private DatePickerDialog createDialogWithoutDateField(){
+        DatePickerDialog dpd = new DatePickerDialog(getActivity(), myDateSelectedListener,selected_year,selected_month, 1);
+        try{
+            java.lang.reflect.Field[] datePickerDialogFields = dpd.getClass().getDeclaredFields();
+            for (java.lang.reflect.Field datePickerDialogField : datePickerDialogFields) {
+                if (datePickerDialogField.getName().equals("mDatePicker")) {
+                    datePickerDialogField.setAccessible(true);
+                    DatePicker datePicker = (DatePicker) datePickerDialogField.get(dpd);
+                    java.lang.reflect.Field[] datePickerFields = datePickerDialogField.getType().getDeclaredFields();
+                    for (java.lang.reflect.Field datePickerField : datePickerFields) {
+                        Log.i("test", datePickerField.getName());
+                        if ("mDaySpinner".equals(datePickerField.getName())) {
+                            datePickerField.setAccessible(true);
+                            Object dayPicker = new Object();
+                            dayPicker = datePickerField.get(datePicker);
+                            ((View) dayPicker).setVisibility(View.GONE);
+                        }
+                    }
+                }
+
+            }
+            dpd.setOnCancelListener(myDateCanceledListener);
+            dpd.setButton(
+                    DialogInterface.BUTTON_NEGATIVE, "İptal",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case DatePickerDialog.BUTTON_NEGATIVE:
+                                    //No button clicked
+                                    getFragmentManager().popBackStack();
+                                    break;
+                            }
+                        }
+                    });
+        }catch(Exception ex){
+        }
+        return dpd;
+
+    }
+
+    private DatePickerDialog.OnDateSetListener myDateSelectedListener
+            = new DatePickerDialog.OnDateSetListener() {
+
+        @Override
+        public void onDateSet(DatePicker arg0, int arg1, int arg2, int arg3) {
+            // TODO Auto-generated method stub
+            // arg1 = year
+            // arg2 = month
+            // arg3 = day
+            selected_year = arg1;
+            selected_month = arg2;
+        }
+    };
+
+    private DatePickerDialog.OnCancelListener myDateCanceledListener
+            = new DatePickerDialog.OnCancelListener() {
+
+        @Override
+        public void onCancel(DialogInterface dialogInterface) {
+            //go back
+            getFragmentManager().popBackStack();
+        }
+    };
+
+    private DatePickerDialog.OnDismissListener myDateDismissListener
+            = new DatePickerDialog.OnDismissListener() {
+
+        @Override
+        public void onDismiss(DialogInterface dialogInterface) {
+            //go back
+            getFragmentManager().popBackStack();
+        }
+    };
 
 }

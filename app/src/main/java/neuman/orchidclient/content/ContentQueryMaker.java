@@ -43,8 +43,8 @@ public class ContentQueryMaker {
         String mSelectionClause =  Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+object_type;
 
 
-        Log.d(TAG, Contract.Entry.CONTENT_URI.toString());
-        Log.d(TAG,"mProjection: "+mProjection.toString());
+        //Log.d(TAG, Contract.Entry.CONTENT_URI.toString());
+        //Log.d(TAG,"mProjection: "+mProjection.toString());
         Cursor mCursor = contentResolver.query(
                 Contract.Entry.CONTENT_URI,  // The content URI of the words table
                 mProjection,                       // The columns to return for each row
@@ -60,12 +60,12 @@ public class ContentQueryMaker {
         Cursor mCursor = this.get_all_of_model_type_cursor(object_type);
         if (null == mCursor) {
             // If the Cursor is empty, the provider found no matches
-            Log.d(TAG,"Cursor Error");
+            //Log.d(TAG,"Cursor Error");
         } else if (mCursor.getCount() < 1) {
-            Log.d(TAG,"No results");
+            //Log.d(TAG,"No results");
         } else {
             while (mCursor.moveToNext()) {
-                Log.d(TAG,"*****CURSOR MOVED*****");
+                //Log.d(TAG,"*****CURSOR MOVED*****");
                 String jsonString = mCursor.getString(2);
                 try{
                     JSONObject mJSON = new JSONObject(jsonString);
@@ -93,7 +93,7 @@ public class ContentQueryMaker {
     }
 
     public void drop_row(Integer row){
-        Log.d(TAG, "Dropping row: "+row);
+        //Log.d(TAG, "Dropping row: "+row);
         // Defines a string to contain the selection clause
         String mSelectionClause =  Contract.Entry._ID+" ="+row+"";
         contentResolver.delete(Contract.Entry.CONTENT_URI, mSelectionClause, null);
@@ -109,8 +109,8 @@ public class ContentQueryMaker {
                         Contract.Entry.COLUMN_NAME_MODEL_ID,
                 };
 
-        Log.d(TAG, Contract.Entry.CONTENT_URI.toString());
-        Log.d(TAG,"mProjection: "+mProjection.toString());
+        //Log.d(TAG, Contract.Entry.CONTENT_URI.toString());
+        //Log.d(TAG,"mProjection: "+mProjection.toString());
         Cursor mCursor = contentResolver.query(
                 Contract.Entry.CONTENT_URI,  // The content URI of the words table
                 mProjection,                       // The columns to return for each row
@@ -161,11 +161,11 @@ public class ContentQueryMaker {
         } else {
             // Insert code here to do something with the results
             while (mCursor.moveToNext()) {
-                Log.d(TAG,"*****CURSOR MOVED*****");
-                Log.d(TAG, mCursor.getColumnName(0)+": "+mCursor.getString(0));
-                Log.d(TAG, mCursor.getColumnName(1)+": "+mCursor.getString(1));
+                //Log.d(TAG,"*****CURSOR MOVED*****");
+                //Log.d(TAG, mCursor.getColumnName(0)+": "+mCursor.getString(0));
+                //Log.d(TAG, mCursor.getColumnName(1)+": "+mCursor.getString(1));
                 String jsonString = mCursor.getString(2);
-                Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
+                //Log.d(TAG, mCursor.getColumnName(2)+": "+jsonString);
                 try{
                     JSONObject mJSON = new JSONObject(jsonString);
                     if( model_type == ObjectTypes.TYPE_RECORD){
@@ -227,9 +227,13 @@ public class ContentQueryMaker {
 
     }
 
+    public static Date getCurrentTime(){
+        return new Date();
+    }
+
     public static String getCurrentTimeStamp() {
         SimpleDateFormat sdfDate = new SimpleDateFormat("hh:mm MM/dd/yy");
-        Date now = new Date();
+        Date now = getCurrentTime();
         String strDate = sdfDate.format(now);
         return strDate;
     }
@@ -242,10 +246,10 @@ public class ContentQueryMaker {
             ContentValues mNewValues = new ContentValues();
             try {
                 JSONObject json = new JSONObject(json_string);
-                Log.d(TAG, "update row with json: "+json_string);
+                //Log.d(TAG, "update row with json: "+json_string);
                 row_id = json.getInt("row_id");
                 mSelectionClause = "_ID"+" = "+row_id;
-                Log.d(TAG, "Trying to save to :"+mSelectionClause);
+                //Log.d(TAG, "Trying to save to :"+mSelectionClause);
             }catch(JSONException e){
                 e.printStackTrace();
             }
@@ -270,11 +274,11 @@ public class ContentQueryMaker {
 
             try {
                 JSONObject json = new JSONObject(json_string);
-                Log.d(TAG, "save_to_provider: "+json_string);
+                //Log.d(TAG, "save_to_provider: "+json_string);
                 mSelectionClause =
                         Contract.Entry.COLUMN_NAME_OBJECTTYPE+" = "+object_type
                                 +" AND "+"_ID"+" = "+row_id;
-                Log.d(TAG, "Trying to save to :"+mSelectionClause);
+                //Log.d(TAG, "Trying to save to :"+mSelectionClause);
             }catch(JSONException e){
                 e.printStackTrace();
             }
