@@ -192,8 +192,8 @@ public class ContentQueryMaker {
 
     public JSONObject get_matching_object(Integer model_type, String key, Object value){
 
-        ArrayList<JSONObject> photo_jsons = get_all_of_object_type(ObjectTypes.TYPE_PHOTO);
-        for(JSONObject j :photo_jsons){
+        ArrayList<JSONObject> jsons = get_all_of_object_type(model_type);
+        for(JSONObject j :jsons){
             try{
                 if(j.getInt(key)==value){
                     return j;

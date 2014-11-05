@@ -1,17 +1,20 @@
 package neuman.orchidclient;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.ListView;
 
 import org.json.JSONException;
@@ -56,6 +59,8 @@ public class OutboxFragment extends Fragment {
     private Boolean drafts;
     private String location_json_string;
     private Location location;
+
+    private Time selected_time = new Time();
 
     private OnFragmentInteractionListener mListener;
 
@@ -110,9 +115,10 @@ public class OutboxFragment extends Fragment {
         //wipe the item list so we don't get doubles
         recordItems = new ArrayList<Record>();
         photoItems = new ArrayList<Photo>();
+        //set time to now
+        selected_time.setToNow();
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_outbox, container, false);
-
         contentQueryMaker = new ContentQueryMaker(getActivity().getContentResolver());
         //we only care about scores in the non draft outbox
         if(drafts != true) {
@@ -159,8 +165,7 @@ public class OutboxFragment extends Fragment {
                 public void onClick(View view) {
                     //view_main.setVisibility(View.INVISIBLE);
                     //view_datepicker.setVisibility(View.VISIBLE);
-                    FragmentManager fragmentManager = getFragmentManager();
-                    fragmentManager.beginTransaction().replace(R.id.content_frame, ScoringFragment.newInstance(location.getJSON().toString())).addToBackStack(null).commit();
+                    createDialogWithoutDateField().show();
 
                 }
             });
@@ -335,6 +340,54 @@ public class OutboxFragment extends Fragment {
             }
         }
     }
+
+    private DatePickerDialog createDialogWithoutDateField(){
+        DatePickerDialog dpd = new DatePickerDialog(getActivity(), myDateSelectedListener,selected_time.year,selected_time.month, 1);
+        dpd.setTitle("Select Month To Score");
+        try{
+            java.lang.reflect.Field[] datePickerDialogFields = dpd.getClass().getDeclaredFields();
+            for (java.lang.reflect.Field datePickerDialogField : datePickerDialogFields) {
+                if (datePickerDialogField.getName().equals("mDatePicker")) {
+                    datePickerDialogField.setAccessible(true);
+                    DatePicker datePicker = (DatePicker) datePickerDialogField.get(dpd);
+                    java.lang.reflect.Field[] datePickerFields = datePickerDialogField.getType().getDeclaredFields();
+                    for (java.lang.reflect.Field datePickerField : datePickerFields) {
+                        Log.i("test", datePickerField.getName());
+                        if ("mDaySpinner".equals(datePickerField.getName())) {
+                            datePickerField.setAccessible(true);
+                            Object dayPicker = new Object();
+                            dayPicker = datePickerField.get(datePicker);
+                            ((View) dayPicker).setVisibility(View.GONE);
+                        }
+                    }
+                }
+
+            }
+
+        }catch(Exception ex){
+        }
+        return dpd;
+
+    }
+
+    private DatePickerDialog.OnDateSetListener myDateSelectedListener
+            = new DatePickerDialog.OnDateSetListener() {
+
+        @Override
+        public void onDateSet(DatePicker arg0, int arg1, int arg2, int arg3) {
+            // TODO Auto-generated method stub
+            // arg1 = year
+            // arg2 = month
+            // arg3 = day
+            selected_time.year = arg1;
+            selected_time.month = arg2;
+            location.put("year", selected_time.year);
+            location.put("month", selected_time.month+1);
+            FragmentManager fragmentManager = getFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.content_frame, ScoringFragment.newInstance(location.getJSON().toString())).addToBackStack(null).commit();
+
+        }
+    };
 
 
 }

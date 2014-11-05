@@ -173,8 +173,12 @@ public class ScoringFragment extends Fragment {
                 try{
                     JSONObject record_json = new JSONObject(jsonString);
                     Record record = new Record(record_json);
-                    //ignore any records not from this location that are not drafts
-                    if((record.is_scored()!=true)&&(record_json.getBoolean("draft")==true) && (record_json.getInt("location_id")==location_json.getInt("id"))){
+                    //ignore any records not from this location that are not drafts or not in the selected month
+                    if((record.is_scored()!=true)&&(record_json.getBoolean("draft")==true)
+                            && (record_json.getInt("location_id")==location_json.getInt("id"))
+                            && (record_json.getInt("month")==location_json.getInt("month"))
+                            && (record_json.getInt("year")==location_json.getInt("year"))
+                            ){
                         record_json.put("row_id", recordCursor.getInt(0));
                         //stick this in the json so if we store it back to the db it will remember having been scored already
                         record.put("scored", true);
@@ -241,7 +245,6 @@ public class ScoringFragment extends Fragment {
                 percent_of_goals_met_indicator.incrementTotal_records();
                 try {
                     Time today = new Time(Time.getCurrentTimezone());
-                    today.setToNow();
                     JSONObject indicator_score = new JSONObject();
                     indicator_score.put("percentage", percentage);
                     indicator_score.put("location_id", location_json.getString("id"));
@@ -250,8 +253,8 @@ public class ScoringFragment extends Fragment {
                     indicator_score.put("passing_record_count", i.getPassing_records());
                     indicator_score.put("passing", is_passing);
                     //months are 0 indexed in java so add 1
-                    indicator_score.put("month", today.month + 1);
-                    indicator_score.put("year", today.year);
+                    indicator_score.put("month", location_json.getInt("month"));
+                    indicator_score.put("year", location_json.getInt("year"));
                     outgoing_scores.put(indicator_score);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -276,6 +279,8 @@ public class ScoringFragment extends Fragment {
 
             //build the outgoing score object
             outgoing_score.put("scores", outgoing_scores);
+            outgoing_score.put("year", location_json.getInt("year"));
+            outgoing_score.put("month", location_json.getInt("month"));
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String hostname = settings.getString("example_text", "NO HOSTNAME");
             outgoing_score.put("title", "(SCORE) "+location_json.get("title")+" Timestamp:"+contentQueryMaker.getCurrentTimeStamp());
@@ -288,7 +293,6 @@ public class ScoringFragment extends Fragment {
 
         // Assign adapter to ListView
         listView.setAdapter(adapter);
-
         return inflatedView;
     }
 
@@ -337,6 +341,9 @@ public class ScoringFragment extends Fragment {
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction().replace(R.id.content_frame, OutboxFragment.newInstance("OUTBOX", null)).addToBackStack(null).commit();
     }
+
+
+
 
 
 

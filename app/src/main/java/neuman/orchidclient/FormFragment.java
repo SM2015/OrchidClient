@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,7 +33,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import neuman.orchidclient.content.ContentQueryMaker;
@@ -66,8 +66,7 @@ public class FormFragment extends Fragment {
     private JSONObject location_json;
     private List fieldList;
     private Integer visible_checkboxes = 0;
-    private Integer selected_month = new Date().getMonth();
-    private Integer selected_year = new Date().getYear();
+    private Time selected_time = new Time();
     private OnFragmentInteractionListener mListener;
 
     private Button button_outbox;
@@ -121,6 +120,7 @@ public class FormFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        selected_time.setToNow();
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_form, container, false);
 
@@ -347,7 +347,6 @@ public class FormFragment extends Fragment {
                     if (checked_radioButton_index==0) {
                         //this means No
                         valueJSON.put("value", false);
-                        visible_checkboxes_checked += 1;
                     } else if (checked_radioButton_index==1){
                         //this means N/A so add one na
                         na_count+=1;
@@ -355,6 +354,7 @@ public class FormFragment extends Fragment {
                     }else if (checked_radioButton_index==2){
                         //this means yes
                         valueJSON.put("value", true);
+                        visible_checkboxes_checked += 1;
                     }else{
                         //make a note that a radiobutton field was skipped
                         //prevent submission at the end
@@ -387,8 +387,8 @@ public class FormFragment extends Fragment {
                 outputJSON.put("location_id", location_json.getInt("id"));
                 outputJSON.put("score", score);
                 outputJSON.put("draft", draft);
-                outputJSON.put("year", selected_year);
-                outputJSON.put("month", selected_month);
+                outputJSON.put("year", selected_time.year);
+                outputJSON.put("month", selected_time.month+1);
                 outputJSON.put("title", "(RECORD) Location: " + location_json.getString("title") + " Indicator: " + incoming_indicator.getString("title") + " Timestamp:" + contentQueryMaker.getCurrentTimeStamp() + " PERCENT: " + Float.toString(score) + "%");
                 //add the row_id so we can update instead of insert if there was a pre-existing record (aka we are editing)
                 if (incoming_record != null) {
@@ -466,7 +466,7 @@ public class FormFragment extends Fragment {
     }
 
     private DatePickerDialog createDialogWithoutDateField(){
-        DatePickerDialog dpd = new DatePickerDialog(getActivity(), myDateSelectedListener,selected_year,selected_month, 1);
+        DatePickerDialog dpd = new DatePickerDialog(getActivity(), myDateSelectedListener,selected_time.year,selected_time.month, 1);
         try{
             java.lang.reflect.Field[] datePickerDialogFields = dpd.getClass().getDeclaredFields();
             for (java.lang.reflect.Field datePickerDialogField : datePickerDialogFields) {
@@ -488,7 +488,7 @@ public class FormFragment extends Fragment {
             }
             dpd.setOnCancelListener(myDateCanceledListener);
             dpd.setButton(
-                    DialogInterface.BUTTON_NEGATIVE, "İptal",
+                    DialogInterface.BUTTON_NEGATIVE, "Cancel",
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             switch (which) {
@@ -498,7 +498,9 @@ public class FormFragment extends Fragment {
                                     break;
                             }
                         }
-                    });
+                    }
+            );
+
         }catch(Exception ex){
         }
         return dpd;
@@ -514,8 +516,8 @@ public class FormFragment extends Fragment {
             // arg1 = year
             // arg2 = month
             // arg3 = day
-            selected_year = arg1;
-            selected_month = arg2;
+            selected_time.year = arg1;
+            selected_time.month = arg2;
         }
     };
 
@@ -524,16 +526,6 @@ public class FormFragment extends Fragment {
 
         @Override
         public void onCancel(DialogInterface dialogInterface) {
-            //go back
-            getFragmentManager().popBackStack();
-        }
-    };
-
-    private DatePickerDialog.OnDismissListener myDateDismissListener
-            = new DatePickerDialog.OnDismissListener() {
-
-        @Override
-        public void onDismiss(DialogInterface dialogInterface) {
             //go back
             getFragmentManager().popBackStack();
         }
