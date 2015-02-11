@@ -43,7 +43,6 @@
                     </div>
                 </div>
                 <div id="other_charts">
-                    <input type="button" value="Say hello" onClick="showAndroidToast('Hello Android!')" />
 
                     <script type="text/javascript">
     function showAndroidToast(toast) {
@@ -150,7 +149,7 @@ Android.showToast(android_series_data);
             }
 
             // draw chart
-            apply_chart($('#container'), data.series, "All Indicators at "+data.noun, true);
+            apply_chart($('#container'), data.series, "All Indicators", true);
 
 
     });

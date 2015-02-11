@@ -16,6 +16,7 @@ public class Indicator extends ModelItem {
     //these are used in the scoring process
     private Integer total_records = 0;
     private Integer passing_records = 0;
+    private Integer text_records = 0;
     private Float percentage = new Float(100.00);
 
     public Indicator(JSONObject j){
@@ -50,6 +51,10 @@ public class Indicator extends ModelItem {
         return field_ids;
     }
 
+    public boolean is_text_only(){
+        return get_boolean_field_ids().isEmpty();
+    }
+
     public Float getPercentage(){
         if(this.total_records==0){
             //nothing doesn't count for anything
@@ -72,6 +77,14 @@ public class Indicator extends ModelItem {
         }catch(JSONException e){
             return null;
         }
+    }
+
+    public void incrementText_records(){
+        this.text_records++;
+    }
+
+    public Integer getText_records(){
+        return text_records;
     }
 
     public Integer getTotal_records(){

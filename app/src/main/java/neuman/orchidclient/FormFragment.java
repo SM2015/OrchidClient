@@ -115,12 +115,14 @@ public class FormFragment extends Fragment {
                 e.printStackTrace();
             }
         }
+        selected_time.setToNow();
+        createDialogWithoutDateField().show();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        selected_time.setToNow();
+
         // Inflate the layout for this fragment
         View inflatedView = inflater.inflate(R.layout.fragment_form, container, false);
 
@@ -226,7 +228,6 @@ public class FormFragment extends Fragment {
         }
 
 
-        createDialogWithoutDateField().show();
         return inflatedView;
     }
 
@@ -385,7 +386,12 @@ public class FormFragment extends Fragment {
                 outputJSON.put("outgoing_url", hostname + "/location/" + new Integer(location_json.getInt("id")).toString() + "/indicator/" + new Integer(incoming_indicator.getInt("id")).toString() + "/record/upload/");
                 outputJSON.put("indicator_id", incoming_indicator.getInt("id"));
                 outputJSON.put("location_id", location_json.getInt("id"));
-                outputJSON.put("score", score);
+                //don't add a score if there are only text boxes
+                if(Float.isNaN(score)){
+                    outputJSON.put("text_only", true);
+                }else {
+                    outputJSON.put("score", score);
+                }
                 outputJSON.put("draft", draft);
                 outputJSON.put("year", selected_time.year);
                 outputJSON.put("month", selected_time.month+1);
@@ -467,7 +473,9 @@ public class FormFragment extends Fragment {
 
     private DatePickerDialog createDialogWithoutDateField(){
         DatePickerDialog dpd = new DatePickerDialog(getActivity(), myDateSelectedListener,selected_time.year,selected_time.month, 1);
+        dpd.setTitle("Select Record Date");
         try{
+            /*
             java.lang.reflect.Field[] datePickerDialogFields = dpd.getClass().getDeclaredFields();
             for (java.lang.reflect.Field datePickerDialogField : datePickerDialogFields) {
                 if (datePickerDialogField.getName().equals("mDatePicker")) {
@@ -486,6 +494,7 @@ public class FormFragment extends Fragment {
                 }
 
             }
+            */
             dpd.setOnCancelListener(myDateCanceledListener);
             dpd.setButton(
                     DialogInterface.BUTTON_NEGATIVE, "Cancel",

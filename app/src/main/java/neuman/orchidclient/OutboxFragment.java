@@ -342,30 +342,25 @@ public class OutboxFragment extends Fragment {
     }
 
     private DatePickerDialog createDialogWithoutDateField(){
-        DatePickerDialog dpd = new DatePickerDialog(getActivity(), myDateSelectedListener,selected_time.year,selected_time.month, 1);
-        dpd.setTitle("Select Month To Score");
-        try{
-            java.lang.reflect.Field[] datePickerDialogFields = dpd.getClass().getDeclaredFields();
-            for (java.lang.reflect.Field datePickerDialogField : datePickerDialogFields) {
-                if (datePickerDialogField.getName().equals("mDatePicker")) {
-                    datePickerDialogField.setAccessible(true);
-                    DatePicker datePicker = (DatePicker) datePickerDialogField.get(dpd);
-                    java.lang.reflect.Field[] datePickerFields = datePickerDialogField.getType().getDeclaredFields();
-                    for (java.lang.reflect.Field datePickerField : datePickerFields) {
-                        Log.i("test", datePickerField.getName());
-                        if ("mDaySpinner".equals(datePickerField.getName())) {
-                            datePickerField.setAccessible(true);
-                            Object dayPicker = new Object();
-                            dayPicker = datePickerField.get(datePicker);
-                            ((View) dayPicker).setVisibility(View.GONE);
-                        }
+
+        DatePickerDialog dpd = new DatePickerDialog(getActivity(), myDateSelectedListener,selected_time.year,selected_time.month, 1)
+        {
+            @Override
+            protected void onCreate(Bundle savedInstanceState)
+            {
+                super.onCreate(savedInstanceState);
+                int year = getContext().getResources()
+                        .getIdentifier("android:id/day", null, null);
+                if(year != 0){
+                    View yearPicker = findViewById(year);
+                    if(yearPicker != null){
+                        yearPicker.setVisibility(View.GONE);
                     }
                 }
-
             }
-
-        }catch(Exception ex){
-        }
+        };
+        dpd.setTitle("Select Year/Month You Want To Score");
+        dpd.getDatePicker().setCalendarViewShown(false);
         return dpd;
 
     }

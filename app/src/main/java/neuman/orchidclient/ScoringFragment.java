@@ -187,11 +187,15 @@ public class ScoringFragment extends Fragment {
                         scored_records.add(record);
                         Indicator record_indicator = get_indicator(indicators, record.getIndicatorID());
                         record_indicator.incrementTotal_records();
-                        if(record.is_passing(checkbox_field_ids)){
-                            //if it passes, add it to the tally for percentages later
-                            record_indicator.incrementPassing_records();
-                        }else{
-                            Log.d(TAG, "record didn't pass");
+                        if(record_indicator.is_text_only()){
+
+                        }else {
+                            if (record.is_passing(checkbox_field_ids)) {
+                                //if it passes, add it to the tally for percentages later
+                                record_indicator.incrementPassing_records();
+                            } else {
+                                Log.d(TAG, "record didn't pass");
+                            }
                         }
                     }
                 }catch(JSONException e){
@@ -236,30 +240,32 @@ public class ScoringFragment extends Fragment {
         outgoing_score = new JSONObject();
         JSONArray outgoing_scores = new JSONArray();
         Indicator percent_of_goals_met_indicator = new Indicator("Percent of Goals Met: ");
-
-        for(Indicator i : indicators){
+        ArrayList<Indicator> text_only_indicators = new ArrayList<Indicator>();
+        for(Indicator i : indicators) {
             //we don't want to score indicators with 0 records as 0% so don't score 0 record indicators at all
-
-                Float percentage = i.getPercentage();
-                Boolean is_passing = percentage > i.getPassing_percentage();
-                percent_of_goals_met_indicator.incrementTotal_records();
-                try {
-                    Time today = new Time(Time.getCurrentTimezone());
-                    JSONObject indicator_score = new JSONObject();
-                    indicator_score.put("percentage", percentage);
-                    indicator_score.put("location_id", location_json.getString("id"));
-                    indicator_score.put("indicator_id", i.getId());
-                    indicator_score.put("total_record_count", i.getTotal_records());
-                    indicator_score.put("passing_record_count", i.getPassing_records());
-                    indicator_score.put("passing", is_passing);
-                    //months are 0 indexed in java so add 1
-                    indicator_score.put("month", location_json.getInt("month"));
-                    indicator_score.put("year", location_json.getInt("year"));
-                    outgoing_scores.put(indicator_score);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            if(i.getTotal_records()>0) {
+            if(i.is_text_only() ) {
+                text_only_indicators.add(i);
+            }else{
+            Float percentage = i.getPercentage();
+            Boolean is_passing = percentage > i.getPassing_percentage();
+            percent_of_goals_met_indicator.incrementTotal_records();
+            try {
+                Time today = new Time(Time.getCurrentTimezone());
+                JSONObject indicator_score = new JSONObject();
+                indicator_score.put("percentage", percentage);
+                indicator_score.put("location_id", location_json.getString("id"));
+                indicator_score.put("indicator_id", i.getId());
+                indicator_score.put("total_record_count", i.getTotal_records());
+                indicator_score.put("passing_record_count", i.getPassing_records());
+                indicator_score.put("passing", is_passing);
+                //months are 0 indexed in java so add 1
+                indicator_score.put("month", location_json.getInt("month"));
+                indicator_score.put("year", location_json.getInt("year"));
+                outgoing_scores.put(indicator_score);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            if (i.getTotal_records() > 0) {
                 //Indicator temp_item = new Indicator(percentage.toString()+" | "+i.getTitle());
                 if (is_passing) {
                     i.color = ObjectTypes.COLOR_GREEN;
@@ -268,10 +274,15 @@ public class ScoringFragment extends Fragment {
                     i.color = ObjectTypes.COLOR_RED;
                 }
                 //items.add(temp_item);
-            }else{
+            } else {
                 //if indicator has no records make it yellow
                 i.color = ObjectTypes.COLOR_YELLOW;
             }
+        }
+        }
+        //remove text only indicators so they don't get displayed
+        for(Indicator i : text_only_indicators) {
+            indicators.remove(i);
         }
         //store the array of indicators in the outgoing_score json for later saving to the db if submitted
         try {

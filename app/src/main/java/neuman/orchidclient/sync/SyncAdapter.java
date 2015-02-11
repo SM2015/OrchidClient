@@ -182,6 +182,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 
 
+
             }
         }catch(JSONException e){
             Log.d(TAG, e.toString());
@@ -275,7 +276,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 throw new IOException(statusLine.getReasonPhrase());
             }
 
-        }catch(IOException e){
+        }catch(Throwable e){
             Log.d("HTTP exception", e.toString());
             e.printStackTrace();
             contentQueryMaker.insert_message(e.toString(), TAG+" sync 6");
